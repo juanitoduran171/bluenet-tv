@@ -21,7 +21,7 @@ jobs:
       - name: Instalar dependencias de Ubuntu que pide Amazon
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq lz4 jq python3 > /dev/null
+          sudo apt-get install -y -qq lz4 jq python3 rsync > /dev/null
           (sudo apt-get install -y -qq watchman > /dev/null 2>&1 || echo "watchman no disponible por apt")
           ls -l /dev/kvm || echo "sin /dev/kvm"
       - name: Ejecutar instalador oficial del SDK de Vega
@@ -37,11 +37,30 @@ jobs:
           echo "== resultado ==" | tee -a probe.log
           (source ~/vega/env 2>/dev/null; which vega && vega --version) 2>&1 | tee -a probe.log || echo "vega NO instalado" | tee -a probe.log
           ls ~/vega 2>&1 | tee -a probe.log || true
+      - name: Generar plantilla oficial y compilarla
+        continue-on-error: true
+        run: |
+          source ~/vega/env
+          {
+            echo "== list-templates"; vega project list-templates 2>&1
+            echo "== generate --help"; vega project generate --help 2>&1
+          } | tee -a probe.log
+          T=$(vega project list-templates 2>/dev/null | grep -oE '[A-Za-z0-9_-]*[Hh]ello[A-Za-z0-9_-]*' | head -1)
+          echo "== plantilla elegida: $T" | tee -a probe.log
+          mkdir -p work && cd work
+          (vega project generate --template "$T" --name bluenetprobe 2>&1 \
+            || vega project generate -t "$T" -n bluenetprobe 2>&1) | tail -40 | tee -a ../probe.log
+          P=$(ls -d */ 2>/dev/null | head -1); echo "== proyecto: $P" | tee -a ../probe.log
+          cd "$P" || exit 0
+          (npm install 2>&1 | tail -15; npm run build:app 2>&1 | tail -60) | tee -a ../../probe.log
+          echo "== vpkg:" | tee -a ../../probe.log; find . -name '*.vpkg' -not -path './node_modules/*' -exec ls -l {} \; | tee -a ../../probe.log
+          mkdir -p ../../template && rsync -a --exclude node_modules --exclude build --exclude .git ./ ../../template/
       - name: Publicar resultado en la rama 'vega-probe'
         if: always()
         run: |
           mkdir out && cp probe.log out/ 2>/dev/null || echo "sin log" > out/probe.log
           cp get_vvm.sh out/ 2>/dev/null || true
+          cp -r template out/template 2>/dev/null || true
           cd out && git init -q && git checkout -q -b vega-probe && git add -A
           git -c user.name=ci -c user.email=ci@users.noreply.github.com commit -qm "probe ${{ github.sha }}"
           git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" vega-probe
