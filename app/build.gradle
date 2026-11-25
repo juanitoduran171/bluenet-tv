@@ -1,0 +1,63 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace = 'ec.net.blue.tv'
+    compileSdk = 37
+
+    defaultConfig {
+        applicationId = 'ec.net.blue.tv'
+        minSdk = 23
+        targetSdk = 36
+        versionCode = 3
+        versionName = '2.0'
+        // Los TV box son ARM: evitamos empaquetar librerias x86 que solo engordan el APK.
+        ndk {
+            abiFilters 'armeabi-v7a', 'arm64-v8a'
+        }
+    }
+
+    signingConfigs {
+        release {
+            // Misma llave que las versiones 1.x, para que se actualice encima sin desinstalar.
+            storeFile = file(System.getenv('BLUENET_KS_FILE') ?: 'bluenet.keystore')
+            storePassword = System.getenv('BLUENET_KS_PASS') ?: 'bluenet2026'
+            keyAlias = System.getenv('BLUENET_KS_ALIAS') ?: 'bluenet'
+            keyPassword = System.getenv('BLUENET_KS_PASS') ?: 'bluenet2026'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled = false
+            signingConfig = signingConfigs.release
+        }
+        debug {
+            signingConfig = signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+
+    lint {
+        // Media3 marca parte de su API como @UnstableApi; no queremos que eso frene la compilacion.
+        abortOnError = false
+        checkReleaseBuilds = false
+    }
+}
+
+def media3 = '1.11.1'
+
+dependencies {
+    implementation "androidx.media3:media3-exoplayer:$media3"
+    implementation "androidx.media3:media3-exoplayer-hls:$media3"
+    implementation "androidx.media3:media3-datasource:$media3"
+    implementation "androidx.media3:media3-common:$media3"
+    implementation "androidx.media3:media3-extractor:$media3"
+    // Decodificador FFmpeg (audio AC3/E-AC3/MP2/DTS... por software). Misma combinacion que la app Jellyfin.
+    implementation 'org.jellyfin.media3:media3-ffmpeg-decoder:1.9.0+1'
+}

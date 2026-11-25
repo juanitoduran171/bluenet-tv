@@ -1,0 +1,50 @@
+name: Compilar APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Compilar (release firmado)
+        run: |
+          chmod +x gradlew
+          set -o pipefail
+          ./gradlew assembleRelease --stacktrace --no-daemon 2>&1 | tee build.log
+
+      - name: Publicar resultado en la rama 'builds'
+        if: always()
+        run: |
+          mkdir -p out
+          cp build.log out/ 2>/dev/null || echo "sin log" > out/build.log
+          APK=$(ls app/build/outputs/apk/release/*.apk 2>/dev/null | head -1 || true)
+          if [ -n "$APK" ]; then cp "$APK" out/BLUEnet-TV.apk; fi
+          printf '%s\n%s\n%s\n' "${{ job.status }}" "${{ github.sha }}" "$(date -u +%FT%TZ)" > out/status.txt
+          cd out
+          git init -q
+          git checkout -q -b builds
+          git add -A
+          git -c user.name="ci" -c user.email="ci@users.noreply.github.com" commit -qm "build ${{ github.sha }}"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" builds
+
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: BLUEnet-TV
+          path: app/build/outputs/apk/release/*.apk
