@@ -1,0 +1,33 @@
+schema-version = 1
+
+[package]
+title = "BLUEnet TV"
+version = "2.2.0"
+# Subir en cada envio a la Appstore.
+build-number = 1
+id = "ec.net.blue.tv"
+icon = "@image/app_icon.png"
+
+[os.version]
+min = "2.0"
+target = "2.0"
+
+[needs]
+
+[wants]
+# Estado de la red (Wi-Fi/cable, nombre y senal) para el diagnostico de soporte
+[[wants.service]]
+id = "com.amazon.network.service"
+
+[[wants.privilege]]
+id = "com.amazon.network.privilege.net-info"
+
+[[wants.module]]
+id = "/com.amazon.kepler.net.net_manager@INetManager"
+
+[components]
+[[components.interactive]]
+id = "ec.net.blue.tv.main"
+runtime-module = "/com.amazon.kepler.runtime.react_native_kepler_4@IReactNativeKepler_0"
+launch-type = "singleton"
+categories = ["com.amazon.category.main"]

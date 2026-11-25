@@ -1,0 +1,65 @@
+name: Compilar Vega (Fire TV)
+
+on:
+  push:
+    branches: [main]
+    paths: ['vega/**', '.github/workflows/vega-build.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: vega
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Dependencias de Ubuntu (las que pide Amazon)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lz4 jq > /dev/null
+
+      - name: Instalar SDK de Vega
+        run: |
+          curl -fsSL https://sdk-installer.vega.labcollab.net/get_vvm.sh -o /tmp/get_vvm.sh
+          (yes "" | bash /tmp/get_vvm.sh) > /tmp/sdk-install.log 2>&1 || true
+          tail -5 /tmp/sdk-install.log
+          source ~/vega/env && vega --version
+
+      - name: Compilar (.vpkg)
+        run: |
+          source ~/vega/env
+          set -o pipefail
+          {
+            echo "== npm install"; npm install --no-audit --no-fund --loglevel=error
+            echo "== typecheck"; npx tsc --noEmit
+            echo "== build"; npm run build:app
+          } 2>&1 | tee ../build-vega.log
+
+      - name: Publicar resultado en la rama 'builds-vega'
+        if: always()
+        working-directory: .
+        run: |
+          mkdir -p out
+          cp build-vega.log out/ 2>/dev/null || echo "sin log" > out/build-vega.log
+          for a in armv7 aarch64 x86_64; do
+            f=$(ls vega/build/${a}-release/*.vpkg 2>/dev/null | head -1 || true)
+            if [ -n "$f" ]; then cp "$f" "out/BLUEnet-TV_${a}.vpkg"; fi
+          done
+          printf '%s\n%s\n%s\n' "${{ job.status }}" "${{ github.sha }}" "$(date -u +%FT%TZ)" > out/status.txt
+          cd out && git init -q && git checkout -q -b builds-vega && git add -A
+          git -c user.name="ci" -c user.email="ci@users.noreply.github.com" commit -qm "vega ${{ github.sha }}"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" builds-vega
+
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: BLUEnet-TV-Vega
+          path: vega/build/*-release/*.vpkg
