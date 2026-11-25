@@ -8,8 +8,10 @@
     <uses-feature android:name="android.software.leanback" android:required="false" />
 
     <application
+        android:name=".App"
         android:label="BLUEnet TV"
-        android:icon="@drawable/ic_launcher"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:banner="@drawable/banner"
         android:allowBackup="false"
         android:usesCleartextTraffic="true"
@@ -33,6 +35,12 @@
             android:exported="false"
             android:screenOrientation="sensorLandscape"
             android:windowSoftInputMode="stateAlwaysHidden|adjustPan"
+            android:configChanges="orientation|screenSize|keyboardHidden|keyboard|navigation|screenLayout|smallestScreenSize|uiMode" />
+
+        <activity
+            android:name=".SeriesActivity"
+            android:exported="false"
+            android:screenOrientation="sensorLandscape"
             android:configChanges="orientation|screenSize|keyboardHidden|keyboard|navigation|screenLayout|smallestScreenSize|uiMode" />
 
         <activity

@@ -36,6 +36,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -44,10 +45,13 @@ public class HomeActivity extends Activity {
 
     private static final Category ALL = new Category("*", "Todos");
 
-    private boolean live = true;
+    private int kind = XtreamClient.TYPE_LIVE;
+    private boolean live = true;    // kind == TYPE_LIVE
+    private boolean lockSeen;       // estado del control parental la ultima vez que refrescamos
 
     private TextView tabLive;
     private TextView tabVod;
+    private TextView tabSeries;
     private EditText search;
     private TextView diagBtn;
     private TextView modeBtn;
@@ -85,7 +89,16 @@ public class HomeActivity extends Activity {
             return;
         }
         buildUi();
-        switchKind(true);
+        switchKind(XtreamClient.TYPE_LIVE);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // Si la app paso a segundo plano, el control parental se volvio a bloquear.
+        if (catAdapter != null && lockSeen != Parental.unlocked) {
+            onParentalChanged();
+        }
     }
 
     @Override
@@ -117,11 +130,11 @@ public class HomeActivity extends Activity {
         if (bmp != null) {
             logo.setImageBitmap(bmp);
         }
-        logo.setScaleType(ImageView.ScaleType.FIT_START);
+        logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
         logo.setFocusable(true);
         logo.setClickable(true);
-        logo.setPadding(Ui.dp(c, 4), Ui.dp(c, 4), Ui.dp(c, 4), Ui.dp(c, 4));
-        logo.setBackground(Ui.states(Ui.rect(c, 0x33FFFFFF, 8, 0, 0), null, Ui.transparent()));
+        logo.setPadding(Ui.dp(c, 2), Ui.dp(c, 2), Ui.dp(c, 2), Ui.dp(c, 2));
+        logo.setBackground(Ui.states(Ui.rect(c, 0x55FFFFFF, 24, 0, 0), null, Ui.transparent()));
         logo.setOnClickListener(new View.OnClickListener() {
             private int taps;
             private long first;
@@ -146,10 +159,11 @@ public class HomeActivity extends Activity {
                 }
             }
         });
-        top.addView(logo, new LinearLayout.LayoutParams(Ui.dp(c, 104), Ui.dp(c, 44)));
+        top.addView(logo, new LinearLayout.LayoutParams(Ui.dp(c, 48), Ui.dp(c, 48)));
 
         tabLive = Ui.button(c, "TV en vivo", false);
         tabVod = Ui.button(c, "Películas", false);
+        tabSeries = Ui.button(c, "Series", false);
         LinearLayout.LayoutParams tabLp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, Ui.dp(c, 44));
         tabLp.leftMargin = Ui.dp(c, 20);
@@ -158,29 +172,20 @@ public class HomeActivity extends Activity {
                 ViewGroup.LayoutParams.WRAP_CONTENT, Ui.dp(c, 44));
         tabLp2.leftMargin = Ui.dp(c, 8);
         top.addView(tabVod, tabLp2);
-        tabLive.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (!live) {
-                    switchKind(true);
-                }
-            }
-        });
-        tabVod.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (live) {
-                    switchKind(false);
-                }
-            }
-        });
+        LinearLayout.LayoutParams tabLp3 = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, Ui.dp(c, 44));
+        tabLp3.leftMargin = Ui.dp(c, 8);
+        top.addView(tabSeries, tabLp3);
+        tabLive.setOnClickListener(tabClick(XtreamClient.TYPE_LIVE));
+        tabVod.setOnClickListener(tabClick(XtreamClient.TYPE_VOD));
+        tabSeries.setOnClickListener(tabClick(XtreamClient.TYPE_SERIES));
 
         View spacer = new View(c);
         top.addView(spacer, new LinearLayout.LayoutParams(0, 1, 1f));
 
         search = Ui.field(c, "Buscar", InputType.TYPE_CLASS_TEXT, EditorInfo.IME_ACTION_SEARCH);
         search.setTextSize(16);
-        top.addView(search, new LinearLayout.LayoutParams(Ui.dp(c, 170), Ui.dp(c, 44)));
+        top.addView(search, new LinearLayout.LayoutParams(Ui.dp(c, 150), Ui.dp(c, 44)));
         search.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int a, int b, int d) {
@@ -239,6 +244,25 @@ public class HomeActivity extends Activity {
                 Session.useExternal = !Session.useExternal;
                 Session.save(HomeActivity.this);
                 refreshModeLabel();
+            }
+        });
+
+        TextView lockBtn = Ui.button(c, "Control parental", false);
+        lockBtn.setTextSize(15);
+        lockBtn.setPadding(Ui.dp(c, 14), Ui.dp(c, 8), Ui.dp(c, 14), Ui.dp(c, 8));
+        LinearLayout.LayoutParams lkLp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, Ui.dp(c, 44));
+        lkLp.leftMargin = Ui.dp(c, 8);
+        top.addView(lockBtn, lkLp);
+        lockBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Parental.showMenu(HomeActivity.this, new Runnable() {
+                    @Override
+                    public void run() {
+                        onParentalChanged();
+                    }
+                });
             }
         });
 
@@ -307,6 +331,9 @@ public class HomeActivity extends Activity {
                     ui.removeCallbacks(pendingSelect);
                 }
                 loadStreams(position);
+                if (isLocked(position)) {
+                    Parental.requestAccess(HomeActivity.this, afterUnlock(position));
+                }
             }
         });
 
@@ -382,6 +409,8 @@ public class HomeActivity extends Activity {
         // ---- navegacion con el control remoto
         tabLive.setNextFocusDownId(catList.getId());
         tabVod.setNextFocusDownId(catList.getId());
+        tabSeries.setNextFocusDownId(catList.getId());
+        lockBtn.setNextFocusDownId(catList.getId());
         search.setNextFocusDownId(catList.getId());
         diagBtn.setNextFocusDownId(catList.getId());
         modeBtn.setNextFocusDownId(catList.getId());
@@ -439,11 +468,15 @@ public class HomeActivity extends Activity {
     }
 
     private void showMessage(String text, Runnable retry) {
+        showMessage(text, retry, retry == null ? null : "Presiona OK para reintentar");
+    }
+
+    private void showMessage(String text, Runnable retry, String okHint) {
         progress.setVisibility(View.GONE);
         chanList.setVisibility(View.GONE);
         vodGrid.setVisibility(View.GONE);
         retryAction = retry;
-        message.setText(retry == null ? text : text + "\n\nPresiona OK para reintentar");
+        message.setText(okHint == null ? text : text + "\n\n" + okHint);
         message.setFocusable(retry != null);
         message.setClickable(retry != null);
         message.setVisibility(View.VISIBLE);
@@ -458,10 +491,27 @@ public class HomeActivity extends Activity {
 
     // ------------------------------------------------------------------ carga de datos
 
-    private void switchKind(boolean toLive) {
-        live = toLive;
-        tabLive.setSelected(live);
-        tabVod.setSelected(!live);
+    private View.OnClickListener tabClick(final int k) {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (kind != k) {
+                    switchKind(k);
+                }
+            }
+        };
+    }
+
+    private String kindKey() {
+        return kind == XtreamClient.TYPE_LIVE ? "L" : kind == XtreamClient.TYPE_SERIES ? "S" : "V";
+    }
+
+    private void switchKind(int k) {
+        kind = k;
+        live = k == XtreamClient.TYPE_LIVE;
+        tabLive.setSelected(k == XtreamClient.TYPE_LIVE);
+        tabVod.setSelected(k == XtreamClient.TYPE_VOD);
+        tabSeries.setSelected(k == XtreamClient.TYPE_SERIES);
         refreshDevButtons();
         suppressFilter = true;
         search.setText("");
@@ -473,8 +523,8 @@ public class HomeActivity extends Activity {
     }
 
     private void loadCategories() {
-        final boolean kindLive = live;
-        final String key = kindLive ? "L" : "V";
+        final int kindNow = kind;
+        final String key = kindKey();
         List<Category> cached = catCache.get(key);
         final int my = ++token;
         if (cached != null) {
@@ -487,7 +537,7 @@ public class HomeActivity extends Activity {
             public void run() {
                 try {
                     final List<Category> res = XtreamClient.categories(
-                            Session.base, Session.user, Session.pass, kindLive);
+                            Session.base, Session.user, Session.pass, kindNow);
                     ui.post(new Runnable() {
                         @Override
                         public void run() {
@@ -539,11 +589,20 @@ public class HomeActivity extends Activity {
             return;
         }
         loadedCat = idx;
+        lockSeen = Parental.unlocked;
         catAdapter.notifyDataSetChanged();
         Category cat = cats.get(idx);
-        final boolean kindLive = live;
+        if (isLocked(idx)) {
+            ++token; // descarta cargas en curso
+            loaded = new ArrayList<Stream>();
+            shown.clear();
+            showMessage("Categoría protegida con control parental.", afterUnlockPrompt(idx),
+                    "Presiona OK para ingresar la contraseña");
+            return;
+        }
+        final int kindNow = kind;
         final String catId = ALL.id.equals(cat.id) ? null : cat.id;
-        final String key = (kindLive ? "L" : "V") + cat.id;
+        final String key = kindKey() + cat.id;
         List<Stream> cached = streamCache.get(key);
         final int my = ++token;
         if (cached != null) {
@@ -556,7 +615,7 @@ public class HomeActivity extends Activity {
             public void run() {
                 try {
                     final List<Stream> res = XtreamClient.streams(
-                            Session.base, Session.user, Session.pass, kindLive, catId);
+                            Session.base, Session.user, Session.pass, kindNow, catId);
                     ui.post(new Runnable() {
                         @Override
                         public void run() {
@@ -596,8 +655,19 @@ public class HomeActivity extends Activity {
 
     private void applyFilter() {
         String q = search.getText().toString().trim().toLowerCase();
+        HashSet<String> hidden = new HashSet<String>();
+        if (!Parental.unlocked) {
+            for (Category c : cats) {
+                if (Parental.isAdult(c.name)) {
+                    hidden.add(c.id);
+                }
+            }
+        }
         shown.clear();
         for (Stream s : loaded) {
+            if (hidden.contains(s.categoryId)) {
+                continue; // protegido por control parental
+            }
             if (q.length() == 0 || s.name.toLowerCase().contains(q)) {
                 shown.add(s);
             }
@@ -631,6 +701,11 @@ public class HomeActivity extends Activity {
             return;
         }
         Stream chosen = shown.get(position);
+        if (chosen.type == XtreamClient.TYPE_SERIES) {
+            SeriesActivity.series = chosen;
+            startActivity(new Intent(this, SeriesActivity.class));
+            return;
+        }
         if (chosen.live && Session.devMode && Session.useExternal) {
             Playback.launchExternal(this, Playback.urlFor(chosen, 0), chosen.name);
             return;
@@ -638,6 +713,41 @@ public class HomeActivity extends Activity {
         PlayerActivity.queue = new ArrayList<Stream>(shown);
         PlayerActivity.index = position;
         startActivity(new Intent(this, PlayerActivity.class));
+    }
+
+    // ------------------------------------------------------------------ control parental
+
+    private boolean isLocked(int idx) {
+        return idx >= 0 && idx < cats.size() && !Parental.unlocked && Parental.isAdult(cats.get(idx).name);
+    }
+
+    private Runnable afterUnlock(final int idx) {
+        return new Runnable() {
+            @Override
+            public void run() {
+                lockSeen = Parental.unlocked;
+                catAdapter.notifyDataSetChanged();
+                loadStreams(idx);
+            }
+        };
+    }
+
+    private Runnable afterUnlockPrompt(final int idx) {
+        return new Runnable() {
+            @Override
+            public void run() {
+                Parental.requestAccess(HomeActivity.this, afterUnlock(idx));
+            }
+        };
+    }
+
+    /** Se bloqueo/desbloqueo: refresca candados, "Todos" y la categoria abierta. */
+    private void onParentalChanged() {
+        lockSeen = Parental.unlocked;
+        catAdapter.notifyDataSetChanged();
+        if (loadedCat >= 0 && loadedCat < cats.size()) {
+            loadStreams(loadedCat);
+        }
     }
 
     @Override
@@ -687,7 +797,11 @@ public class HomeActivity extends Activity {
             }
             boolean current = i == loadedCat;
             t.setTextColor(Ui.textColors(Ui.TEXT, current ? Ui.ACCENT_LIGHT : Ui.TEXT));
-            t.setText(cats.get(i).name);
+            String nm = cats.get(i).name;
+            if (Parental.isAdult(nm)) {
+                nm = (Parental.unlocked ? "\uD83D\uDD13 " : "\uD83D\uDD12 ") + nm; // candado abierto/cerrado
+            }
+            t.setText(nm);
             return t;
         }
     }

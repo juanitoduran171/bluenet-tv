@@ -134,6 +134,13 @@ public class PlayerActivity extends Activity {
             } else if (state == Player.STATE_ENDED) {
                 if (live) {
                     h.postDelayed(replay, 1000); // un canal en vivo no deberia terminar: reconecta
+                } else if (queue.get(index).type == XtreamClient.TYPE_EPISODE && index + 1 < queue.size()) {
+                    // serie: sigue con el proximo episodio
+                    index++;
+                    attempt = 0;
+                    noVideoTried = 0;
+                    resumeMs = 0;
+                    play();
                 } else {
                     finish();
                 }

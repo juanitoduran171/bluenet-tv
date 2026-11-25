@@ -27,6 +27,10 @@ final class Playback {
 
     /** attempt par: formato preferido; impar: el alterno. En VOD siempre la misma URL. */
     static String urlFor(Stream s, int attempt) {
+        if (s.type == XtreamClient.TYPE_EPISODE) {
+            return XtreamClient.seriesUrl(Session.base, Session.user, Session.pass, s.id,
+                    s.ext.length() == 0 ? "mp4" : s.ext);
+        }
         if (!s.live) {
             return XtreamClient.vodUrl(Session.base, Session.user, Session.pass, s.id,
                     s.ext.length() == 0 ? "mp4" : s.ext);

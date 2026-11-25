@@ -70,7 +70,7 @@ public class LoginActivity extends Activity {
             logo.setImageBitmap(bmp);
         }
         logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        col.addView(logo, new LinearLayout.LayoutParams(Ui.dp(c, 260), Ui.dp(c, 115)));
+        col.addView(logo, new LinearLayout.LayoutParams(Ui.dp(c, 150), Ui.dp(c, 150)));
 
         TextView title = new TextView(c);
         title.setText("Iniciar sesión");

@@ -31,13 +31,52 @@ public final class XtreamClient {
         }
     }
 
+    public static final int TYPE_LIVE = 0;
+    public static final int TYPE_VOD = 1;
+    public static final int TYPE_SERIES = 2;   // una serie (abre su ficha)
+    public static final int TYPE_EPISODE = 3;  // un episodio (se reproduce)
+
     public static final class Stream {
         public String id = "";
         public String name = "";
         public String icon = "";
-        public String ext = "";     // solo VOD: container_extension
+        public String ext = "";     // VOD/episodio: container_extension
         public String rating = "";
+        public String categoryId = "";
         public boolean live;
+        public int type = TYPE_VOD;
+    }
+
+    public static final class Episode {
+        public String id = "";
+        public int season;
+        public int number;
+        public String title = "";
+        public String ext = "mp4";
+        public String plot = "";
+        public String image = "";
+        public String duration = "";  // texto, ej. "00:42:10"
+    }
+
+    public static final class Season {
+        public final int number;
+        public String name;
+        public final List<Episode> episodes = new ArrayList<Episode>();
+
+        Season(int number) {
+            this.number = number;
+            this.name = "Temporada " + number;
+        }
+    }
+
+    public static final class SeriesInfo {
+        public String name = "";
+        public String plot = "";
+        public String cover = "";
+        public String genre = "";
+        public String year = "";
+        public String rating = "";
+        public final List<Season> seasons = new ArrayList<Season>();
     }
 
     public static final class Auth {
@@ -181,7 +220,12 @@ public final class XtreamClient {
     // ------------------------------------------------------------------ catalogo
 
     public static List<Category> categories(String base, String user, String pass, boolean live) throws ApiException {
-        String action = live ? "get_live_categories" : "get_vod_categories";
+        return categories(base, user, pass, live ? TYPE_LIVE : TYPE_VOD);
+    }
+
+    public static List<Category> categories(String base, String user, String pass, int kind) throws ApiException {
+        String action = kind == TYPE_LIVE ? "get_live_categories"
+                : kind == TYPE_SERIES ? "get_series_categories" : "get_vod_categories";
         JSONArray arr = getArray(api(base, user, pass, action, null));
         List<Category> out = new ArrayList<Category>();
         for (int i = 0; i < arr.length(); i++) {
@@ -202,7 +246,15 @@ public final class XtreamClient {
     /** categoryId == null devuelve todo el catalogo. */
     public static List<Stream> streams(String base, String user, String pass, boolean live, String categoryId)
             throws ApiException {
-        String action = live ? "get_live_streams" : "get_vod_streams";
+        return streams(base, user, pass, live ? TYPE_LIVE : TYPE_VOD, categoryId);
+    }
+
+    /** kind: TYPE_LIVE, TYPE_VOD o TYPE_SERIES. categoryId == null devuelve todo. */
+    public static List<Stream> streams(String base, String user, String pass, int kind, String categoryId)
+            throws ApiException {
+        boolean live = kind == TYPE_LIVE;
+        boolean series = kind == TYPE_SERIES;
+        String action = live ? "get_live_streams" : series ? "get_series" : "get_vod_streams";
         JSONArray arr = getArray(api(base, user, pass, action, categoryId));
         List<Stream> out = new ArrayList<Stream>();
         for (int i = 0; i < arr.length(); i++) {
@@ -212,15 +264,17 @@ public final class XtreamClient {
             }
             Stream s = new Stream();
             s.live = live;
-            s.id = str(o, "stream_id");
+            s.type = kind;
+            s.id = str(o, series ? "series_id" : "stream_id");
+            s.categoryId = str(o, "category_id");
             s.name = str(o, "name");
             s.icon = str(o, "stream_icon");
             if (s.icon.length() == 0) {
                 s.icon = str(o, "cover");
             }
             s.rating = str(o, "rating");
-            s.ext = live ? "" : str(o, "container_extension");
-            if (!live && s.ext.length() == 0) {
+            s.ext = (live || series) ? "" : str(o, "container_extension");
+            if (!live && !series && s.ext.length() == 0) {
                 s.ext = "mp4";
             }
             if (s.id.length() == 0) {
@@ -242,6 +296,136 @@ public final class XtreamClient {
 
     public static String vodUrl(String base, String user, String pass, String streamId, String ext) {
         return base + "/movie/" + seg(user) + "/" + seg(pass) + "/" + seg(streamId) + "." + ext;
+    }
+
+    public static String seriesUrl(String base, String user, String pass, String episodeId, String ext) {
+        return base + "/series/" + seg(user) + "/" + seg(pass) + "/" + seg(episodeId) + "." + ext;
+    }
+
+    /** Ficha de una serie con sus temporadas y episodios (get_series_info). */
+    public static SeriesInfo seriesInfo(String base, String user, String pass, String seriesId) throws ApiException {
+        String body;
+        try {
+            body = httpGet(base + "/player_api.php?username=" + enc(user) + "&password=" + enc(pass)
+                    + "&action=get_series_info&series_id=" + enc(seriesId), 10000, 60000).trim();
+        } catch (IOException e) {
+            throw new ApiException(ApiException.KIND_NETWORK, "Error de red: " + e.getMessage());
+        }
+        JSONObject root;
+        try {
+            root = new JSONObject(body);
+        } catch (JSONException e) {
+            throw new ApiException(ApiException.KIND_RESPONSE, "Respuesta inválida del servidor.");
+        }
+        SeriesInfo si = new SeriesInfo();
+        JSONObject info = root.optJSONObject("info");
+        if (info != null) {
+            si.name = str(info, "name");
+            si.plot = str(info, "plot");
+            si.cover = str(info, "cover");
+            si.genre = str(info, "genre");
+            si.rating = str(info, "rating");
+            String date = str(info, "releaseDate");
+            if (date.length() == 0) {
+                date = str(info, "release_date");
+            }
+            si.year = date.length() >= 4 ? date.substring(0, 4) : date;
+        }
+        java.util.TreeMap<Integer, Season> bySeason = new java.util.TreeMap<Integer, Season>();
+        Object eps = root.opt("episodes");
+        if (eps instanceof JSONObject) {
+            // formato habitual: {"1": [...], "2": [...]}
+            JSONObject byKey = (JSONObject) eps;
+            java.util.Iterator<String> keys = byKey.keys();
+            while (keys.hasNext()) {
+                String k = keys.next();
+                JSONArray arr = byKey.optJSONArray(k);
+                addEpisodes(arr, parseIntSafe(k, 0), bySeason);
+            }
+        } else if (eps instanceof JSONArray) {
+            // algunos paneles: [[...temporada 1...], [...temporada 2...]]
+            JSONArray outer = (JSONArray) eps;
+            for (int i = 0; i < outer.length(); i++) {
+                JSONArray arr = outer.optJSONArray(i);
+                if (arr != null) {
+                    addEpisodes(arr, i + 1, bySeason);
+                } else if (outer.optJSONObject(i) != null) {
+                    JSONArray single = new JSONArray();
+                    single.put(outer.optJSONObject(i));
+                    addEpisodes(single, 0, bySeason);
+                }
+            }
+        }
+        // nombres de temporada, si el panel los trae
+        JSONArray seasons = root.optJSONArray("seasons");
+        if (seasons != null) {
+            for (int i = 0; i < seasons.length(); i++) {
+                JSONObject so = seasons.optJSONObject(i);
+                if (so == null) {
+                    continue;
+                }
+                Season season = bySeason.get(parseIntSafe(str(so, "season_number"), -1));
+                String nm = str(so, "name");
+                if (season != null && nm.length() > 0) {
+                    season.name = nm;
+                }
+            }
+        }
+        for (Season season : bySeason.values()) {
+            java.util.Collections.sort(season.episodes, new java.util.Comparator<Episode>() {
+                @Override
+                public int compare(Episode a, Episode b) {
+                    return a.number < b.number ? -1 : (a.number == b.number ? 0 : 1);
+                }
+            });
+            si.seasons.add(season);
+        }
+        return si;
+    }
+
+    private static void addEpisodes(JSONArray arr, int seasonFromKey, java.util.Map<Integer, Season> bySeason) {
+        if (arr == null) {
+            return;
+        }
+        for (int i = 0; i < arr.length(); i++) {
+            JSONObject o = arr.optJSONObject(i);
+            if (o == null) {
+                continue;
+            }
+            Episode e = new Episode();
+            e.id = str(o, "id");
+            if (e.id.length() == 0) {
+                continue;
+            }
+            int sn = parseIntSafe(str(o, "season"), seasonFromKey);
+            e.season = sn > 0 ? sn : (seasonFromKey > 0 ? seasonFromKey : 1);
+            e.number = parseIntSafe(str(o, "episode_num"), i + 1);
+            e.title = str(o, "title");
+            String ext = str(o, "container_extension");
+            e.ext = ext.length() > 0 ? ext : "mp4";
+            JSONObject in = o.optJSONObject("info");
+            if (in != null) {
+                e.plot = str(in, "plot");
+                e.image = str(in, "movie_image");
+                e.duration = str(in, "duration");
+            }
+            Season season = bySeason.get(e.season);
+            if (season == null) {
+                season = new Season(e.season);
+                bySeason.put(e.season, season);
+            }
+            season.episodes.add(e);
+        }
+    }
+
+    static int parseIntSafe(String s, int fallback) {
+        try {
+            return Integer.parseInt(s.trim());
+        } catch (NumberFormatException e) {
+            return fallback;
+        } catch (NullPointerException e) {
+            return fallback;
+        }
     }
 
     // ------------------------------------------------------------------ internos

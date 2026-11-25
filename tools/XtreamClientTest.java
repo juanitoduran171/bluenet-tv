@@ -52,6 +52,29 @@ public class XtreamClientTest {
         check("candidatos url completa", XtreamClient.candidates("https://x.com:8443/player_api.php?a=1").toString().equals("[https://x.com:8443]"));
         check("candidatos host:puerto", XtreamClient.candidates("x.com:8080/").toString().equals("[http://x.com:8080, https://x.com:8080]"));
 
+        // ---- series ----
+        List<Category> sc = XtreamClient.categories(b, U, P, XtreamClient.TYPE_SERIES);
+        check("cats series", sc.size() == 1 && sc.get(0).name.equals("Dramas"));
+        List<Stream> ss = XtreamClient.streams(b, U, P, XtreamClient.TYPE_SERIES, "50");
+        check("series: 3, id=series_id, tipo SERIES", ss.size() == 3 && ss.get(0).id.equals("301") && ss.get(0).type == XtreamClient.TYPE_SERIES && !ss.get(0).live);
+        check("series: cover como icono, null -> vacio", ss.get(0).icon.equals("http://x/sa.jpg") && ss.get(1).icon.equals(""));
+        check("series: categoryId", ss.get(0).categoryId.equals("50"));
+        check("live: categoryId", XtreamClient.streams(b, U, P, true, "1").get(0).categoryId.equals("1"));
+        SeriesInfo a1 = XtreamClient.seriesInfo(b, U, P, "301");
+        check("ficha: nombre/genero/anio", a1.name.equals("Serie A") && a1.genre.equals("Drama") && a1.year.equals("2019"));
+        check("ficha: temporadas ordenadas 1,2", a1.seasons.size() == 2 && a1.seasons.get(0).number == 1 && a1.seasons.get(1).number == 2);
+        check("ficha: nombre de temporada del panel", a1.seasons.get(0).name.equals("Primera temporada") && a1.seasons.get(1).name.equals("Temporada 2"));
+        Season s1 = a1.seasons.get(0);
+        check("episodios ordenados por numero", s1.episodes.size() == 3 && s1.episodes.get(0).number == 1 && s1.episodes.get(2).number == 3 && s1.episodes.get(0).id.equals("800"));
+        check("extension vacia -> mp4", s1.episodes.get(1).ext.equals("mp4") && s1.episodes.get(0).ext.equals("mkv"));
+        check("imagen null -> vacio; imagen presente", s1.episodes.get(0).image.equals("") && a1.seasons.get(1).episodes.get(0).image.equals("http://x/e.jpg"));
+        SeriesInfo a2 = XtreamClient.seriesInfo(b, U, P, "302");
+        check("formato lista de listas: 2 temporadas (1 y 2 episodios)", a2.seasons.size() == 2 && a2.seasons.get(0).episodes.size() == 1 && a2.seasons.get(1).episodes.size() == 2);
+        check("release_date null -> anio vacio", a2.year.equals(""));
+        check("serie sin episodios -> 0 temporadas", XtreamClient.seriesInfo(b, U, P, "303").seasons.isEmpty());
+        check("serie inexistente -> vacia sin error", XtreamClient.seriesInfo(b, U, P, "999").seasons.isEmpty());
+        check("url episodio", XtreamClient.seriesUrl(b, U, P, "800", "mkv").equals("http://127.0.0.1:18080/series/juan/cl%20ave%2B1%26%C3%A9/800.mkv"));
+
         System.out.println(fails == 0 ? "\nTODAS LAS PRUEBAS PASARON" : "\nFALLAS: " + fails);
         System.exit(fails == 0 ? 0 : 1);
     }

@@ -11,6 +11,20 @@ VOD_CATS = [{"category_id": "10", "category_name": "Acción", "parent_id": 0}]
 LIVE = {"1": [{"num": 1, "name": "Canal Uno", "stream_type": "live", "stream_id": 101, "stream_icon": "http://x/u.png", "category_id": "1"},
               {"num": 2, "name": "Canal Dos", "stream_type": "live", "stream_id": 102, "stream_icon": None, "category_id": "1"}],
         "2": []}
+SER_CATS = [{"category_id": "50", "category_name": "Dramas", "parent_id": 0}]
+SERIES = {"50": [{"num": 1, "name": "Serie A", "series_id": 301, "cover": "http://x/sa.jpg", "rating": "8", "category_id": "50"},
+                 {"num": 2, "name": "Serie B", "series_id": 302, "cover": None, "category_id": "50"},
+                 {"num": 3, "name": "Serie vacía", "series_id": 303, "cover": "", "category_id": "50"}]}
+EP = lambda i, n, s, ext="mkv", img=None: {"id": str(i), "episode_num": n, "title": "Ep %s" % n, "container_extension": ext, "season": s,
+                                       "info": {"movie_image": img, "plot": "trama %s" % n, "duration": "00:42:00"}}
+INFO = {
+  "301": {"info": {"name": "Serie A", "plot": "Una serie", "cover": "http://x/sa.jpg", "genre": "Drama", "releaseDate": "2019-05-01", "rating": "8"},
+          "seasons": [{"season_number": 1, "name": "Primera temporada"}],
+          "episodes": {"2": [EP(902, 2, 2), EP(901, 1, 2, img="http://x/e.jpg")], "1": [EP(801, 3, 1), EP(800, 1, 1), EP(802, 2, 1, ext="")]}},
+  "302": {"info": {"name": "Serie B", "release_date": None}, "seasons": [],
+          "episodes": [[EP(700, 1, 1, "mp4")], [EP(710, 1, 2, "mp4"), EP(711, 2, 2, "mp4")]]},
+  "303": {"info": {"name": "Serie vacía"}, "episodes": []},
+}
 VOD = {"10": [{"name": "Película A", "stream_id": 201, "stream_icon": "", "cover": "http://x/c.jpg", "rating": "7.5", "container_extension": "mkv", "category_id": "10"},
               {"name": "Película B", "stream_id": 202, "stream_icon": "http://x/b.jpg", "rating": None, "category_id": "10"}]}
 
@@ -42,6 +56,10 @@ class H(BaseHTTPRequestHandler):
                     "max_connections": "1", "active_cons": "0", "allowed_output_formats": ["m3u8", "ts"]}, "server_info": {"url": "x"}}))
         if act == "get_live_categories": return self.send(200, json.dumps(LIVE_CATS))
         if act == "get_vod_categories": return self.send(200, json.dumps(VOD_CATS))
+        if act == "get_series_categories": return self.send(200, json.dumps(SER_CATS))
+        if act == "get_series":
+            c = q.get("category_id"); return self.send(200, json.dumps(SERIES.get(c, []) if c else sum(SERIES.values(), [])))
+        if act == "get_series_info": return self.send(200, json.dumps(INFO.get(q.get("series_id"), {"info": [], "episodes": []})))
         if act == "get_live_streams":
             c = q.get("category_id"); return self.send(200, json.dumps(LIVE.get(c, []) if c else sum(LIVE.values(), [])))
         if act == "get_vod_streams":
