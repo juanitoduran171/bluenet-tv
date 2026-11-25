@@ -45,16 +45,15 @@ jobs:
             echo "== list-templates"; vega project list-templates 2>&1
             echo "== generate --help"; vega project generate --help 2>&1
           } | tee -a probe.log
-          T=$(vega project list-templates 2>/dev/null | grep -oE '[A-Za-z0-9_-]*[Hh]ello[A-Za-z0-9_-]*' | head -1)
-          echo "== plantilla elegida: $T" | tee -a probe.log
           mkdir -p work && cd work
-          (vega project generate --template "$T" --name bluenetprobe 2>&1 \
-            || vega project generate -t "$T" -n bluenetprobe 2>&1) | tail -40 | tee -a ../probe.log
-          P=$(ls -d */ 2>/dev/null | head -1); echo "== proyecto: $P" | tee -a ../probe.log
-          cd "$P" || exit 0
-          (npm install 2>&1 | tail -15; npm run build:app 2>&1 | tail -60) | tee -a ../../probe.log
-          echo "== vpkg:" | tee -a ../../probe.log; find . -name '*.vpkg' -not -path './node_modules/*' -exec ls -l {} \; | tee -a ../../probe.log
-          mkdir -p ../../template && rsync -a --exclude node_modules --exclude build --exclude .git ./ ../../template/
+          vega project generate --template helloWorld --name bluenettv --packageId ec.net.blue.tv 2>&1 | tail -20 | tee -a ../probe.log
+          echo "== archivos generados:" | tee -a ../probe.log; find . -maxdepth 2 -not -path './node_modules*' | sort | tee -a ../probe.log
+          (npm install 2>&1 | tail -5; npm run build:app 2>&1 | grep -E "created:|error|Error|ERR" | head -40) | tee -a ../probe.log
+          echo "== vpkg:" | tee -a ../probe.log; find . -name '*.vpkg' -not -path './node_modules/*' -exec ls -l {} \; | tee -a ../probe.log
+          echo "== dependencias @amazon-devices instaladas:" | tee -a ../probe.log
+          ls node_modules/@amazon-devices 2>/dev/null | tee -a ../probe.log
+          mkdir -p ../template && rsync -a --exclude node_modules --exclude build --exclude .git ./ ../template/
+          cd ..
       - name: Publicar resultado en la rama 'vega-probe'
         if: always()
         run: |
