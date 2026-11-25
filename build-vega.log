@@ -1,0 +1,204 @@
+== npm install
+
+added 1089 packages in 8s
+== typecheck
+== build
+
+> @amazon-devices/bluenettv@2.2.0 build:app
+> npm-run-all build:release
+
+
+> @amazon-devices/bluenettv@2.2.0 build:release
+> react-native build-vega --build-type Release
+
+- Awaiting resources 
+[36m[1minfo[22m[39m [0mBuilding bundle artifacts for index.js[0m
+[SYSTEM_BUNDLE] Creating app bundle config with globalPrefix: (none)
+[36m[1minfo[22m[39m [0mBuilding split bundle for index.js[0m
+[34m
+                        ▒▒▓▓▓▓▒▒
+                     ▒▓▓▓▒▒░░▒▒▓▓▓▒
+                  ▒▓▓▓▓░░░▒▒▒▒░░░▓▓▓▓▒
+                 ▓▓▒▒▒▓▓▓▓▓▓▓▓▓▓▓▓▒▒▒▓▓
+                 ▓▓░░░░░▒▓▓▓▓▓▓▒░░░░░▓▓
+                 ▓▓░░▓▓▒░░░▒▒░░░▒▓▒░░▓▓
+                 ▓▓░░▓▓▓▓▓▒▒▒▒▓▓▓▓▒░░▓▓
+                 ▓▓░░▓▓▓▓▓▓▓▓▓▓▓▓▓▒░░▓▓
+                 ▓▓▒░░▒▒▓▓▓▓▓▓▓▓▒░░░▒▓▓
+                  ▒▓▓▓▒░░░▒▓▓▒░░░▒▓▓▓▒
+                     ▒▓▓▓▒░░░░▒▓▓▓▒
+                        ▒▒▓▓▓▓▒▒
+
+[39m
+[34m[1m                Welcome to Metro [37mv0.83.8[39m
+[22m[39m[2m              Fast - Scalable - Integrated
+
+[22m
+Getting Dependencies from System Modules: /home/runner/work/bluenet-tv/bluenet-tv/vega/node_modules/@amazon-devices/react-native-kepler/SystemModules/amzn__react-native-kepler-4.modules.txt
+Getting Dependencies from System Modules: /home/runner/work/bluenet-tv/bluenet-tv/vega/node_modules/@amazon-devices/react-native-async-storage__async-storage/SystemModules/amzn__react-native-async-storage__async-storage-2.modules.txt
+Getting Dependencies from System Modules: /home/runner/work/bluenet-tv/bluenet-tv/vega/node_modules/@amazon-devices/keplerscript-netmgr-lib/SystemModules/amzn__keplerscript-netmgr-lib-2.modules.txt
+Getting Dependencies from System Modules: /home/runner/work/bluenet-tv/bluenet-tv/vega/node_modules/@amazon-devices/react-native-w3cmedia/SystemModules/amzn__react-native-w3cmedia-2.modules.txt
+Getting Dependencies from System Modules: /home/runner/work/bluenet-tv/bluenet-tv/vega/node_modules/@amazon-devices/kepler-media-controls/SystemModules/amzn__kepler-media-controls.modules.txt
+Getting Dependencies from System Modules: /home/runner/work/bluenet-tv/bluenet-tv/vega/node_modules/@amazon-devices/keplermediadescriptor/SystemModules/amzn__keplermediadescriptor-1.modules.txt
+LOG:Writing bundle output to: /home/runner/work/bluenet-tv/bluenet-tv/vega/build/lib/rn-bundles/Release/index.bundle
+LOG:Writing sourcemap output to: /home/runner/work/bluenet-tv/bluenet-tv/vega/build/debugging/Release/srcmap/index.bundle.map
+LOG:Done writing bundle output
+LOG:Done writing sourcemap output
+Copying 1 asset files
+Done copying assets
+[36m[1minfo[22m[39m [0mCompleted building JS bundle and sourcemap for index.js[0m
+[36m[1minfo[22m[39m [0mCompleted processing debugging files for index.js[0m
+[36m[1minfo[22m[39m [0mCompleted building Hermes bundle for index.js[0m
+[36m[1minfo[22m[39m [0mInitiating native artifacts build for Vega platform[0m
+
+🔍 Build Configuration
+───────────────────────────────────────
+OS configuration resolved from package.json: ["vega"]
+Architectures resolved from package.json: ["armv7","x86_64","aarch64"]
+Warning: Skipping module lineage for @amazon-devices/react-native-async-storage__async-storage@~2.1.9000000002: the requested major exists in sdk-compat.json, but no profile satisfies this range.
+🔧 Resolved OS-version compatibility for 4 managed dependencies
+Module contract: 3 dependency needs, 0 wants (written to app staging via kepler-library-manifest.json).
+validating '/home/runner/work/bluenet-tv/bluenet-tv/vega/manifest.kepler-validation-4124-82c8a614b155bfb4c95a9db5.toml' ...
+analyzing manifest.toml ...
+manifest.toml is valid
+manifest validation found 0 errors
+manifest.toml:42:6 info: [wants.module.id] Kepler module dependency '/com.amazon.kepler.net.net_manager@INetManager' MAY require the privilege 'com.amazon.wifi.privilege.read-wifi-credential' to function, but the privilege is not requested in the manifest. Ensure that you request the appropriate privileges for the APIs that you use. Disregard this warning if you do not need this privilege
+  help: This privilege is required to read wifi credential. For further information, see: https://developer.amazon.com/docs/kepler-native-development/KeplerNetworkManagerInterface.html
+manifest.toml:42:6 info: [wants.module.id] Kepler module dependency '/com.amazon.kepler.net.net_manager@INetManager' MAY require the privilege 'com.amazon.wifi.privilege.wifi-scan' to function, but the privilege is not requested in the manifest. Ensure that you request the appropriate privileges for the APIs that you use. Disregard this warning if you do not need this privilege
+  help: This privilege is required to scan wifi and get scan results. For further information, see: https://developer.amazon.com/docs/kepler-native-development/KeplerNetworkManagerInterface.html
+manifest.toml:42:6 info: [wants.module.id] Kepler module dependency '/com.amazon.kepler.net.net_manager@INetManager' MAY require the privilege 'com.amazon.network.privilege.net-admin' to function, but the privilege is not requested in the manifest. Ensure that you request the appropriate privileges for the APIs that you use. Disregard this warning if you do not need this privilege
+  help: This privilege is required to configure network/wifi. For further information, see: https://developer.amazon.com/docs/kepler-native-development/KeplerNetworkManagerInterface.html
+
+done.
+
+🔨 Build Plan (3 targets)
+───────────────────────────────────────
+  Release: aarch64, armv7, x86_64
+
+🔍 Build Parallelization
+───────────────────────────────────────
+Parallelizing 3 total requests:
+  - Known targets and buildTypes: aarch64 for Release
+  - Known targets and buildTypes: armv7 for Release
+  - Known targets and buildTypes: x86_64 for Release
+Running at most 2 threads in parallel
+
+[native-build] Could not compare package-lock.json, continuing to autolink
+[native-build] Perform autolinking on 4 qualified npm packages
+[native-build] [2m2026-11-25T23:16:12.224778Z[0m [32m INFO[0m [2mamzn_kepler_manifest_module_remapper[0m[2m:[0m Checking manifest at: /home/runner/work/bluenet-tv/bluenet-tv/vega/build/private/vega/aarch64/Release/manifest.toml
+[native-build] [2m2026-11-25T23:16:12.224960Z[0m [32m INFO[0m [2mamzn_kepler_manifest_module_remapper::modify[0m[2m:[0m Found dependencies to add to the manifest: 
+[native-build] 	wants: []
+[native-build] 	needs: ["/com.amazon.kepler.keplerscript_4@IKeplerScript_0", "/com.amazon.kepler.keplerscript_netmgr_lib_2@INetmgrTurbomodule_0", "/com.amazon.kepler.runtime.react_native_kepler_4@IReactNativeKepler_0", "/com.amazon.kepler.w3cmedia_2@IW3cmedia_3"]
+[native-build] [2m2026-11-25T23:16:12.224974Z[0m [32m INFO[0m [2mamzn_kepler_manifest_module_remapper[0m[2m:[0m Writing new manifest to: /home/runner/work/bluenet-tv/bluenet-tv/vega/build/private/vega/aarch64/Release/manifest.toml
+[native-build] [2m2026-11-25T23:16:12.225219Z[0m [32m INFO[0m [2mamzn_kepler_manifest_module_remapper[0m[2m:[0m Manifest remapping complete
+[native-build] Calling vpt with args pack /home/runner/work/bluenet-tv/bluenet-tv/vega/build/private/vega/aarch64/Release -n @amazon-devices/bluenettv_aarch64 -d /home/runner/work/bluenet-tv/bluenet-tv/vega/build/private/kepler/@amazon-devices/bluenettv/0.1/vega/aarch64/Release --validate
+[native-build] creating vpkg ...
+[native-build] analyzing manifest.toml ...
+[native-build] manifest.toml is valid
+[native-build] manifest validation found 0 errors
+[native-build] manifest.toml:42:6 info: [wants.module.id] Kepler module dependency '/com.amazon.kepler.net.net_manager@INetManager' MAY require the privilege 'com.amazon.wifi.privilege.read-wifi-credential' to function, but the privilege is not requested in the manifest. Ensure that you request the appropriate privileges for the APIs that you use. Disregard this warning if you do not need this privilege
+[native-build]   help: This privilege is required to read wifi credential. For further information, see: https://developer.amazon.com/docs/kepler-native-development/KeplerNetworkManagerInterface.html
+[native-build] manifest.toml:42:6 info: [wants.module.id] Kepler module dependency '/com.amazon.kepler.net.net_manager@INetManager' MAY require the privilege 'com.amazon.wifi.privilege.wifi-scan' to function, but the privilege is not requested in the manifest. Ensure that you request the appropriate privileges for the APIs that you use. Disregard this warning if you do not need this privilege
+[native-build]   help: This privilege is required to scan wifi and get scan results. For further information, see: https://developer.amazon.com/docs/kepler-native-development/KeplerNetworkManagerInterface.html
+[native-build] manifest.toml:42:6 info: [wants.module.id] Kepler module dependency '/com.amazon.kepler.net.net_manager@INetManager' MAY require the privilege 'com.amazon.network.privilege.net-admin' to function, but the privilege is not requested in the manifest. Ensure that you request the appropriate privileges for the APIs that you use. Disregard this warning if you do not need this privilege
+[native-build]   help: This privilege is required to configure network/wifi. For further information, see: https://developer.amazon.com/docs/kepler-native-development/KeplerNetworkManagerInterface.html
+[native-build] 
+[native-build] staging package artifacts ...
+[native-build] generating meta-info ...
+[native-build] archiving ...
+[native-build] created: /home/runner/work/bluenet-tv/bluenet-tv/vega/build/private/kepler/@amazon-devices/bluenettv/0.1/vega/aarch64/Release/@amazon-devices/bluenettv_aarch64.vpkg
+[native-build] done.
+[native-build] {
+[native-build]   "title": "BLUEnet TV",
+[native-build]   "id": "ec.net.blue.tv",
+[native-build]   "version": "2.2.0",
+[native-build]   "build_number": 1,
+[native-build]   "size": 696521,
+[native-build]   "os_version_registry": {
+[native-build]     "contract_package_version": "1.0.4482.0",
+[native-build]     "os_versions": [
+[native-build]       "1.2",
+[native-build]       "2.0"
+[native-build]     ]
+[native-build]   }
+[native-build] }
+[native-build] Could not compare package-lock.json, continuing to autolink
+[native-build] Perform autolinking on 4 qualified npm packages
+[native-build] [2m2026-11-25T23:16:12.700814Z[0m [32m INFO[0m [2mamzn_kepler_manifest_module_remapper[0m[2m:[0m Checking manifest at: /home/runner/work/bluenet-tv/bluenet-tv/vega/build/private/vega/armv7/Release/manifest.toml
+[native-build] [2m2026-11-25T23:16:12.701008Z[0m [32m INFO[0m [2mamzn_kepler_manifest_module_remapper::modify[0m[2m:[0m Found dependencies to add to the manifest: 
+[native-build] 	wants: []
+[native-build] 	needs: ["/com.amazon.kepler.keplerscript_4@IKeplerScript_0", "/com.amazon.kepler.keplerscript_netmgr_lib_2@INetmgrTurbomodule_0", "/com.amazon.kepler.runtime.react_native_kepler_4@IReactNativeKepler_0", "/com.amazon.kepler.w3cmedia_2@IW3cmedia_3"]
+[native-build] [2m2026-11-25T23:16:12.701023Z[0m [32m INFO[0m [2mamzn_kepler_manifest_module_remapper[0m[2m:[0m Writing new manifest to: /home/runner/work/bluenet-tv/bluenet-tv/vega/build/private/vega/armv7/Release/manifest.toml
+[native-build] [2m2026-11-25T23:16:12.701258Z[0m [32m INFO[0m [2mamzn_kepler_manifest_module_remapper[0m[2m:[0m Manifest remapping complete
+[native-build] Calling vpt with args pack /home/runner/work/bluenet-tv/bluenet-tv/vega/build/private/vega/armv7/Release -n @amazon-devices/bluenettv_armv7 -d /home/runner/work/bluenet-tv/bluenet-tv/vega/build/private/kepler/@amazon-devices/bluenettv/0.1/vega/armv7/Release --validate
+[native-build] creating vpkg ...
+[native-build] analyzing manifest.toml ...
+[native-build] manifest.toml is valid
+[native-build] manifest validation found 0 errors
+[native-build] manifest.toml:42:6 info: [wants.module.id] Kepler module dependency '/com.amazon.kepler.net.net_manager@INetManager' MAY require the privilege 'com.amazon.wifi.privilege.read-wifi-credential' to function, but the privilege is not requested in the manifest. Ensure that you request the appropriate privileges for the APIs that you use. Disregard this warning if you do not need this privilege
+[native-build]   help: This privilege is required to read wifi credential. For further information, see: https://developer.amazon.com/docs/kepler-native-development/KeplerNetworkManagerInterface.html
+[native-build] manifest.toml:42:6 info: [wants.module.id] Kepler module dependency '/com.amazon.kepler.net.net_manager@INetManager' MAY require the privilege 'com.amazon.wifi.privilege.wifi-scan' to function, but the privilege is not requested in the manifest. Ensure that you request the appropriate privileges for the APIs that you use. Disregard this warning if you do not need this privilege
+[native-build]   help: This privilege is required to scan wifi and get scan results. For further information, see: https://developer.amazon.com/docs/kepler-native-development/KeplerNetworkManagerInterface.html
+[native-build] manifest.toml:42:6 info: [wants.module.id] Kepler module dependency '/com.amazon.kepler.net.net_manager@INetManager' MAY require the privilege 'com.amazon.network.privilege.net-admin' to function, but the privilege is not requested in the manifest. Ensure that you request the appropriate privileges for the APIs that you use. Disregard this warning if you do not need this privilege
+[native-build]   help: This privilege is required to configure network/wifi. For further information, see: https://developer.amazon.com/docs/kepler-native-development/KeplerNetworkManagerInterface.html
+[native-build] 
+[native-build] staging package artifacts ...
+[native-build] generating meta-info ...
+[native-build] archiving ...
+[native-build] created: /home/runner/work/bluenet-tv/bluenet-tv/vega/build/private/kepler/@amazon-devices/bluenettv/0.1/vega/armv7/Release/@amazon-devices/bluenettv_armv7.vpkg
+[native-build] done.
+[native-build] {
+[native-build]   "title": "BLUEnet TV",
+[native-build]   "id": "ec.net.blue.tv",
+[native-build]   "version": "2.2.0",
+[native-build]   "build_number": 1,
+[native-build]   "size": 696521,
+[native-build]   "os_version_registry": {
+[native-build]     "contract_package_version": "1.0.4482.0",
+[native-build]     "os_versions": [
+[native-build]       "1.2",
+[native-build]       "2.0"
+[native-build]     ]
+[native-build]   }
+[native-build] }
+[native-build] Could not compare package-lock.json, continuing to autolink
+[native-build] Perform autolinking on 4 qualified npm packages
+[native-build] [2m2026-11-25T23:16:13.215583Z[0m [32m INFO[0m [2mamzn_kepler_manifest_module_remapper[0m[2m:[0m Checking manifest at: /home/runner/work/bluenet-tv/bluenet-tv/vega/build/private/vega/x86_64/Release/manifest.toml
+[native-build] [2m2026-11-25T23:16:13.215776Z[0m [32m INFO[0m [2mamzn_kepler_manifest_module_remapper::modify[0m[2m:[0m Found dependencies to add to the manifest: 
+[native-build] 	wants: []
+[native-build] 	needs: ["/com.amazon.kepler.keplerscript_4@IKeplerScript_0", "/com.amazon.kepler.keplerscript_netmgr_lib_2@INetmgrTurbomodule_0", "/com.amazon.kepler.runtime.react_native_kepler_4@IReactNativeKepler_0", "/com.amazon.kepler.w3cmedia_2@IW3cmedia_3"]
+[native-build] [2m2026-11-25T23:16:13.215791Z[0m [32m INFO[0m [2mamzn_kepler_manifest_module_remapper[0m[2m:[0m Writing new manifest to: /home/runner/work/bluenet-tv/bluenet-tv/vega/build/private/vega/x86_64/Release/manifest.toml
+[native-build] [2m2026-11-25T23:16:13.216100Z[0m [32m INFO[0m [2mamzn_kepler_manifest_module_remapper[0m[2m:[0m Manifest remapping complete
+[native-build] Calling vpt with args pack /home/runner/work/bluenet-tv/bluenet-tv/vega/build/private/vega/x86_64/Release -n @amazon-devices/bluenettv_x86_64 -d /home/runner/work/bluenet-tv/bluenet-tv/vega/build/private/kepler/@amazon-devices/bluenettv/0.1/vega/x86_64/Release --validate
+[native-build] creating vpkg ...
+[native-build] analyzing manifest.toml ...
+[native-build] manifest.toml is valid
+[native-build] manifest validation found 0 errors
+[native-build] manifest.toml:42:6 info: [wants.module.id] Kepler module dependency '/com.amazon.kepler.net.net_manager@INetManager' MAY require the privilege 'com.amazon.wifi.privilege.read-wifi-credential' to function, but the privilege is not requested in the manifest. Ensure that you request the appropriate privileges for the APIs that you use. Disregard this warning if you do not need this privilege
+[native-build]   help: This privilege is required to read wifi credential. For further information, see: https://developer.amazon.com/docs/kepler-native-development/KeplerNetworkManagerInterface.html
+[native-build] manifest.toml:42:6 info: [wants.module.id] Kepler module dependency '/com.amazon.kepler.net.net_manager@INetManager' MAY require the privilege 'com.amazon.wifi.privilege.wifi-scan' to function, but the privilege is not requested in the manifest. Ensure that you request the appropriate privileges for the APIs that you use. Disregard this warning if you do not need this privilege
+[native-build]   help: This privilege is required to scan wifi and get scan results. For further information, see: https://developer.amazon.com/docs/kepler-native-development/KeplerNetworkManagerInterface.html
+[native-build] manifest.toml:42:6 info: [wants.module.id] Kepler module dependency '/com.amazon.kepler.net.net_manager@INetManager' MAY require the privilege 'com.amazon.network.privilege.net-admin' to function, but the privilege is not requested in the manifest. Ensure that you request the appropriate privileges for the APIs that you use. Disregard this warning if you do not need this privilege
+[native-build]   help: This privilege is required to configure network/wifi. For further information, see: https://developer.amazon.com/docs/kepler-native-development/KeplerNetworkManagerInterface.html
+[native-build] 
+[native-build] staging package artifacts ...
+[native-build] generating meta-info ...
+[native-build] archiving ...
+[native-build] created: /home/runner/work/bluenet-tv/bluenet-tv/vega/build/private/kepler/@amazon-devices/bluenettv/0.1/vega/x86_64/Release/@amazon-devices/bluenettv_x86_64.vpkg
+[native-build] done.
+[native-build] {
+[native-build]   "title": "BLUEnet TV",
+[native-build]   "id": "ec.net.blue.tv",
+[native-build]   "version": "2.2.0",
+[native-build]   "build_number": 1,
+[native-build]   "size": 696521,
+[native-build]   "os_version_registry": {
+[native-build]     "contract_package_version": "1.0.4482.0",
+[native-build]     "os_versions": [
+[native-build]       "1.2",
+[native-build]       "2.0"
+[native-build]     ]
+[native-build]   }
+[native-build] }
+[native-build] vega vtbuild exited with code 0
+[36m[1minfo[22m[39m [0mbuild-vega completed[0m
