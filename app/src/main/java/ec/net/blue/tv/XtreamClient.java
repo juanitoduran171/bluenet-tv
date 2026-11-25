@@ -92,6 +92,8 @@ public final class XtreamClient {
         public static final int KIND_CREDENTIALS = 1;
         public static final int KIND_ACCOUNT = 2;
         public static final int KIND_RESPONSE = 3;
+        /** El servidor respondio pero rechazo el acceso (403, 5xx, etc.): clave erronea o falla del servicio. */
+        public static final int KIND_DENIED = 4;
 
         public final int kind;
 
@@ -105,6 +107,16 @@ public final class XtreamClient {
     }
 
     // ------------------------------------------------------------------ servidor
+
+    /** Como candidates(), pero con el servidor que ya funciono antes en primer lugar. */
+    public static List<String> candidates(String input, String preferredBase) {
+        List<String> out = candidates(input);
+        if (preferredBase != null && preferredBase.length() > 0) {
+            out.remove(preferredBase);
+            out.add(0, preferredBase);
+        }
+        return out;
+    }
 
     /** Normaliza lo que el usuario escribio y devuelve las bases a probar, en orden. */
     public static List<String> candidates(String input) {
@@ -141,12 +153,22 @@ public final class XtreamClient {
      * Si el servidor responde pero rechaza las credenciales, falla de inmediato.
      */
     public static Auth authenticate(String serverInput, String user, String pass) throws ApiException {
-        List<String> bases = candidates(serverInput);
+        return authenticate(serverInput, user, pass, null);
+    }
+
+    /**
+     * preferredBase: servidor que ya funciono (se prueba primero). Si ese servidor responde con un
+     * error HTTP, no seguimos probando otros puertos: la respuesta es "rechazado" de inmediato.
+     */
+    public static Auth authenticate(String serverInput, String user, String pass, String preferredBase)
+            throws ApiException {
+        List<String> bases = candidates(serverInput, preferredBase);
         if (bases.isEmpty()) {
             throw new ApiException(ApiException.KIND_RESPONSE, "Escribe el servidor.");
         }
         IOException lastIo = null;
         boolean sawNonXtream = false;
+        int httpSeen = 0;
         for (String base : bases) {
             String body;
             try {
@@ -154,6 +176,11 @@ public final class XtreamClient {
             } catch (HttpStatusException e) {
                 if (e.code == 401) {
                     throw new ApiException(ApiException.KIND_CREDENTIALS, "Usuario o contraseña incorrectos.");
+                }
+                httpSeen = e.code;
+                if (base.equals(preferredBase)) {
+                    // es nuestro servidor y rechazo el acceso: no tiene sentido probar otros puertos
+                    throw new ApiException(ApiException.KIND_DENIED, "El servidor rechazó el acceso (HTTP " + e.code + ").");
                 }
                 lastIo = e;
                 continue;
@@ -208,6 +235,9 @@ public final class XtreamClient {
                 }
             }
             return a;
+        }
+        if (httpSeen > 0) {
+            throw new ApiException(ApiException.KIND_DENIED, "El servidor rechazó el acceso (HTTP " + httpSeen + ").");
         }
         if (sawNonXtream) {
             throw new ApiException(ApiException.KIND_RESPONSE,

@@ -28,6 +28,15 @@ public class LoginActivity extends Activity {
     private TextView status;
     private ProgressBar spinner;
     private boolean busy;
+    private TextView netLabel;
+    private final android.os.Handler h = new android.os.Handler(android.os.Looper.getMainLooper());
+    private final Runnable netTick = new Runnable() {
+        @Override
+        public void run() {
+            refreshNet();
+            h.postDelayed(this, 5000);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle b) {
@@ -38,11 +47,45 @@ public class LoginActivity extends Activity {
         userField.setText(Session.user == null ? "" : Session.user);
         passField.setText(Session.pass == null ? "" : Session.pass);
 
+        NetInfo.askPermissionOnce(this);
         boolean skipAuto = getIntent().getBooleanExtra("noauto", false);
         if (!skipAuto && Session.user.length() > 0 && Session.pass.length() > 0) {
             attemptLogin(); // sesion guardada: entra directo
         } else {
             userField.requestFocus();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        h.removeCallbacks(netTick);
+        h.post(netTick);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        h.removeCallbacks(netTick);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
+        super.onRequestPermissionsResult(requestCode, permissions, results);
+        refreshNet();
+    }
+
+    private void refreshNet() {
+        if (netLabel != null) {
+            netLabel.setText(NetInfo.describe(this) + "   ·   BLUEnet TV " + appVersion(this));
+        }
+    }
+
+    static String appVersion(Context c) {
+        try {
+            return "v" + c.getPackageManager().getPackageInfo(c.getPackageName(), 0).versionName;
+        } catch (Exception e) {
+            return "";
         }
     }
 
@@ -91,7 +134,30 @@ public class LoginActivity extends Activity {
         passField = Ui.field(c, "Contraseña",
                 InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD,
                 EditorInfo.IME_ACTION_DONE);
-        col.addView(passField, fieldLp(c, 56, 18));
+        col.addView(passField, fieldLp(c, 56, 8));
+
+        // "Mostrar contraseña" (reemplaza al ojito del teclado, que no se entiende en TV)
+        final TextView showPass = Ui.button(c, "Mostrar contraseña", false);
+        showPass.setTextSize(15);
+        showPass.setOnClickListener(new View.OnClickListener() {
+            private boolean visible;
+
+            @Override
+            public void onClick(View v) {
+                visible = !visible;
+                int sel = passField.getSelectionEnd();
+                passField.setInputType(InputType.TYPE_CLASS_TEXT | (visible
+                        ? InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                        : InputType.TYPE_TEXT_VARIATION_PASSWORD));
+                passField.setSelection(Math.max(0, Math.min(sel, passField.length())));
+                showPass.setText(visible ? "Ocultar contraseña" : "Mostrar contraseña");
+            }
+        });
+        LinearLayout.LayoutParams spLp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, Ui.dp(c, 42));
+        spLp.gravity = Gravity.END;
+        spLp.bottomMargin = Ui.dp(c, 14);
+        col.addView(showPass, spLp);
         passField.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent e) {
@@ -126,20 +192,35 @@ public class LoginActivity extends Activity {
         col.addView(status, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
+        // red del equipo, al pie (para soporte: el cliente manda foto)
+        netLabel = new TextView(c);
+        netLabel.setTextColor(Ui.MUTED);
+        netLabel.setTextSize(13);
+        netLabel.setGravity(Gravity.CENTER);
+        FrameLayout.LayoutParams nl = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT,
+                Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
+        nl.bottomMargin = Ui.dp(c, 14);
+        root.addView(netLabel, nl);
+        refreshNet();
+
         setContentView(root);
     }
 
     /** Mensaje para el cliente: sin nombres de servidor ni detalles tecnicos. */
-    static String friendly(XtreamClient.ApiException e) {
+    static String friendly(Context c, XtreamClient.ApiException e) {
         switch (e.kind) {
             case XtreamClient.ApiException.KIND_CREDENTIALS:
                 return "Usuario o contraseña incorrectos.";
             case XtreamClient.ApiException.KIND_ACCOUNT:
                 return "Tu suscripción no está activa. Comunícate con BLUEnet.";
             case XtreamClient.ApiException.KIND_NETWORK:
-                return "No pudimos conectar con el servicio. Revisa tu conexión a internet e inténtalo de nuevo.";
+                if (!NetInfo.isConnected(c)) {
+                    return "Tu equipo no está conectado a ninguna red. Revisa el Wi-Fi o el cable de internet.";
+                }
+                return "Contraseña incorrecta o error del servicio. Revisa tus datos e inténtalo de nuevo.";
             default:
-                return "El servicio no está disponible en este momento. Inténtalo más tarde.";
+                return "Contraseña incorrecta o error del servicio. Revisa tus datos e inténtalo de nuevo.";
         }
     }
 
@@ -185,7 +266,7 @@ public class LoginActivity extends Activity {
                 XtreamClient.Auth auth = null;
                 XtreamClient.ApiException err = null;
                 try {
-                    auth = XtreamClient.authenticate(s, u, p);
+                    auth = XtreamClient.authenticate(s, u, p, Session.base);
                 } catch (XtreamClient.ApiException e) {
                     err = e;
                 }
@@ -202,7 +283,9 @@ public class LoginActivity extends Activity {
                             Session.pass = p;
                             Session.apply(fa);
                             Session.save(LoginActivity.this);
-                            startActivity(new Intent(LoginActivity.this, HomeActivity.class));
+                            Intent home = new Intent(LoginActivity.this, HomeActivity.class);
+                            home.putExtra("resume", true); // al abrir la app, retomar el ultimo canal
+                            startActivity(home);
                             finish();
                         } else {
                             if (fe.kind == XtreamClient.ApiException.KIND_CREDENTIALS) {
@@ -212,7 +295,8 @@ public class LoginActivity extends Activity {
                                 userField.requestFocus();
                             }
                             android.util.Log.w(Config.TAG, "login: " + fe.getMessage());
-                            setBusy(false, friendly(fe), true);
+                            setBusy(false, friendly(LoginActivity.this, fe)
+                                    + (Session.devMode ? "\n(" + fe.getMessage() + ")" : ""), true);
                         }
                     }
                 });

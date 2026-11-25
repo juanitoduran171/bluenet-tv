@@ -12,7 +12,12 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.AbsListView;
+import android.widget.AdapterView;
+import android.widget.BaseAdapter;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -32,6 +37,8 @@ import androidx.media3.extractor.ts.DefaultTsPayloadReaderFactory;
 
 import ec.net.blue.tv.XtreamClient.Stream;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -41,6 +48,8 @@ public class PlayerActivity extends Activity {
     /** Lista de reproduccion actual (la categoria que se estaba viendo) y posicion. */
     static List<Stream> queue;
     static int index;
+    /** Categoria desde la que se abrio la lista ("*" = Todos), para retomar el ultimo canal. */
+    static String queueCategory = "*";
 
     private static final int LIVE_TIMEOUT_MS = 15000;   // espera maxima a que un canal empiece
     private static final int VOD_TIMEOUT_MS = 30000;
@@ -59,6 +68,9 @@ public class PlayerActivity extends Activity {
     private TextView status;       // "Cargando..." bajo el indicador
     private TextView errorView;    // mensaje central (fallo total)
     private TextView banner;       // aviso no bloqueante (canal sin imagen)
+    private LinearLayout chanPanel; // lista de canales (OK en un canal en vivo)
+    private ListView chanListView;
+    private ChanAdapter chanAdapter;
 
     private boolean live;
     private int attempt;           // fallos acumulados del elemento actual (decide el formato)
@@ -96,6 +108,12 @@ public class PlayerActivity extends Activity {
         @Override
         public void run() {
             onPlaybackError("tiempo de espera agotado");
+        }
+    };
+    private final Runnable hidePanel = new Runnable() {
+        @Override
+        public void run() {
+            hideChannelList();
         }
     };
     private final Runnable firstFrameCheck = new Runnable() {
@@ -174,6 +192,7 @@ public class PlayerActivity extends Activity {
             if (live) {
                 // formato confirmado para este canal
                 Session.extOk.put(queue.get(index).id, Playback.extOfUrl(currentUrl));
+                Session.saveLastChannel(PlayerActivity.this, queue.get(index).id, queueCategory);
                 attempt = 0;
                 noVideoTried = 0;
             }
@@ -300,6 +319,45 @@ public class PlayerActivity extends Activity {
                 ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(this, 6));
         bl.topMargin = Ui.dp(this, 10);
         panel.addView(bar, bl);
+
+        // ---- panel lateral con la lista de canales
+        chanPanel = new LinearLayout(this);
+        chanPanel.setOrientation(LinearLayout.VERTICAL);
+        chanPanel.setBackgroundColor(0xEE0A1722);
+        chanPanel.setPadding(Ui.dp(this, 16), Ui.dp(this, 20), Ui.dp(this, 16), Ui.dp(this, 12));
+        chanPanel.setVisibility(View.GONE);
+        root.addView(chanPanel, new FrameLayout.LayoutParams(
+                Ui.dp(this, 380), ViewGroup.LayoutParams.MATCH_PARENT, Gravity.LEFT));
+        TextView ph = new TextView(this);
+        ph.setText("Canales");
+        ph.setTextColor(Ui.TEXT);
+        ph.setTextSize(20);
+        chanPanel.addView(ph);
+        TextView phHint = new TextView(this);
+        phHint.setText("↑ ↓ elegir   •   OK: ver   •   ATRÁS: cerrar");
+        phHint.setTextColor(Ui.MUTED);
+        phHint.setTextSize(13);
+        LinearLayout.LayoutParams hl = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        hl.bottomMargin = Ui.dp(this, 10);
+        chanPanel.addView(phHint, hl);
+        chanAdapter = new ChanAdapter();
+        chanListView = new ListView(this);
+        chanListView.setDivider(null);
+        chanListView.setSelector(Ui.transparent());
+        chanListView.setVerticalScrollBarEnabled(false);
+        chanListView.setAdapter(chanAdapter);
+        chanPanel.addView(chanListView, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+        chanListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                hideChannelList();
+                if (position != index) {
+                    zapTo(position);
+                }
+            }
+        });
 
         root.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -429,9 +487,9 @@ public class PlayerActivity extends Activity {
             return;
         }
         // Ya probamos ambos formatos: dejamos el audio (puede ser una radio) y avisamos.
-        banner.setText(Session.devMode
+        banner.setText((Session.devMode
                 ? "Sin imagen: " + why + ".   OK: abrir en VLC"
-                : "Este canal no muestra imagen en este equipo.");
+                : "Este canal no muestra imagen en este equipo.") + "\n" + supportLine());
         banner.setVisibility(View.VISIBLE);
         failed = Session.devMode; // en modo tecnico, OK abre VLC
     }
@@ -485,8 +543,126 @@ public class PlayerActivity extends Activity {
                 ? "OK: abrir en VLC     ↑ ↓: otro canal     ATRÁS: volver"
                 : (live ? "OK: reintentar     ↑ ↓: otro canal     ATRÁS: volver"
                         : "OK: reintentar     ATRÁS: volver");
-        errorView.setText(head + (details.length() > 0 ? "\n\n" + details : "") + "\n\n" + keys);
+        errorView.setText(head + (details.length() > 0 ? "\n\n" + details : "") + "\n\n" + keys
+                + "\n\n" + supportLine());
         errorView.setVisibility(View.VISIBLE);
+    }
+
+    /** Datos para soporte cuando el cliente manda foto: red, canal, cuenta, hora y version. */
+    private String supportLine() {
+        return NetInfo.describe(this) + "\nCanal: " + queue.get(index).name + "   ·   Cuenta: " + Session.user
+                + "   ·   " + new SimpleDateFormat("dd/MM HH:mm").format(new Date())
+                + "   ·   " + LoginActivity.appVersion(this);
+    }
+
+    // ------------------------------------------------------------------ lista de canales
+
+    private boolean panelVisible() {
+        return chanPanel != null && chanPanel.getVisibility() == View.VISIBLE;
+    }
+
+    private void showChannelList() {
+        if (!live || queue.size() < 2) {
+            showOverlay();
+            return;
+        }
+        overlay.setVisibility(View.GONE);
+        chanAdapter.notifyDataSetChanged();
+        chanPanel.setVisibility(View.VISIBLE);
+        chanListView.requestFocus();
+        chanListView.setSelection(index);
+        h.removeCallbacks(hidePanel);
+        h.postDelayed(hidePanel, 10000);
+    }
+
+    private void hideChannelList() {
+        h.removeCallbacks(hidePanel);
+        if (chanPanel != null) {
+            chanPanel.setVisibility(View.GONE);
+        }
+    }
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent ev) {
+        if (panelVisible() && ev.getAction() == KeyEvent.ACTION_DOWN) {
+            h.removeCallbacks(hidePanel); // mientras se usa la lista no se cierra sola
+            h.postDelayed(hidePanel, 10000);
+        }
+        return super.dispatchKeyEvent(ev);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (panelVisible()) {
+            hideChannelList();
+            return;
+        }
+        super.onBackPressed();
+    }
+
+    private final class ChanAdapter extends BaseAdapter {
+        @Override
+        public int getCount() {
+            return queue.size();
+        }
+
+        @Override
+        public Object getItem(int i) {
+            return queue.get(i);
+        }
+
+        @Override
+        public long getItemId(int i) {
+            return i;
+        }
+
+        @Override
+        public View getView(int i, View convert, ViewGroup parent) {
+            LinearLayout row;
+            if (convert == null) {
+                row = new LinearLayout(PlayerActivity.this);
+                row.setOrientation(LinearLayout.HORIZONTAL);
+                row.setGravity(Gravity.CENTER_VERTICAL);
+                row.setPadding(Ui.dp(PlayerActivity.this, 8), Ui.dp(PlayerActivity.this, 4),
+                        Ui.dp(PlayerActivity.this, 8), Ui.dp(PlayerActivity.this, 4));
+                row.setLayoutParams(new AbsListView.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(PlayerActivity.this, 56)));
+                row.setBackground(Ui.states(Ui.rect(PlayerActivity.this, Ui.ACCENT, 10, 0, 0),
+                        Ui.rect(PlayerActivity.this, Ui.ACCENT, 10, 0, 0), Ui.transparent()));
+                TextView num = new TextView(PlayerActivity.this);
+                num.setTextColor(Ui.MUTED);
+                num.setTextSize(14);
+                num.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
+                row.addView(num, new LinearLayout.LayoutParams(Ui.dp(PlayerActivity.this, 36),
+                        ViewGroup.LayoutParams.WRAP_CONTENT));
+                ImageView logo = new ImageView(PlayerActivity.this);
+                logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                LinearLayout.LayoutParams ll = new LinearLayout.LayoutParams(
+                        Ui.dp(PlayerActivity.this, 44), Ui.dp(PlayerActivity.this, 44));
+                ll.leftMargin = Ui.dp(PlayerActivity.this, 10);
+                row.addView(logo, ll);
+                TextView name = new TextView(PlayerActivity.this);
+                name.setTextSize(17);
+                name.setSingleLine(true);
+                name.setEllipsize(android.text.TextUtils.TruncateAt.END);
+                LinearLayout.LayoutParams nl = new LinearLayout.LayoutParams(0,
+                        ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+                nl.leftMargin = Ui.dp(PlayerActivity.this, 12);
+                row.addView(name, nl);
+                row.setTag(new View[]{num, logo, name});
+            } else {
+                row = (LinearLayout) convert;
+            }
+            View[] v = (View[]) row.getTag();
+            Stream st = queue.get(i);
+            ((TextView) v[0]).setText(String.valueOf(i + 1));
+            TextView name = (TextView) v[2];
+            name.setText(st.name);
+            // el canal que se esta viendo, resaltado
+            name.setTextColor(Ui.textColors(Ui.TEXT, i == index ? Ui.ACCENT_LIGHT : Ui.TEXT));
+            ImageLoader.load((ImageView) v[1], st.icon, 96);
+            return row;
+        }
     }
 
     private void retry() {
@@ -500,7 +676,14 @@ public class PlayerActivity extends Activity {
         if (n < 2) {
             return;
         }
-        index = (index + delta + n) % n;
+        zapTo((index + delta + n) % n);
+    }
+
+    private void zapTo(int newIndex) {
+        if (newIndex < 0 || newIndex >= queue.size()) {
+            return;
+        }
+        index = newIndex;
         attempt = 0;
         noVideoTried = 0;
         resumeMs = 0;
@@ -555,7 +738,7 @@ public class PlayerActivity extends Activity {
                     sb.append("   •   ").append(vs.width).append("x").append(vs.height);
                 }
             }
-            sb.append("   •   ↑ ↓ cambiar canal");
+            sb.append("   •   ↑ ↓ cambiar canal   •   OK: lista de canales");
             info.setText(sb.toString());
             return;
         }
@@ -605,9 +788,24 @@ public class PlayerActivity extends Activity {
             }
             return true;
         }
+        if (panelVisible()) {
+            if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+                hideChannelList();
+                return true;
+            }
+            return super.onKeyDown(keyCode, ev);
+        }
         switch (keyCode) {
             case KeyEvent.KEYCODE_DPAD_CENTER:
             case KeyEvent.KEYCODE_ENTER:
+                if (ev.getRepeatCount() == 0) {
+                    if (live) {
+                        showChannelList();
+                    } else {
+                        togglePause();
+                    }
+                }
+                return true;
             case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
                 if (ev.getRepeatCount() == 0) {
                     togglePause();

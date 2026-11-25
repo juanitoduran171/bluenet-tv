@@ -79,6 +79,14 @@ public class HomeActivity extends Activity {
     private boolean firstFocus = true;
     private Runnable pendingSelect;
     private Runnable retryAction;
+    private TextView netFooter;
+    private final Runnable netTick = new Runnable() {
+        @Override
+        public void run() {
+            refreshFooter();
+            ui.postDelayed(this, 5000);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle b) {
@@ -90,6 +98,91 @@ public class HomeActivity extends Activity {
         }
         buildUi();
         switchKind(XtreamClient.TYPE_LIVE);
+        NetInfo.askPermissionOnce(this);
+        if (b == null && getIntent().getBooleanExtra("resume", false) && Session.lastChanId.length() > 0) {
+            resumeLastChannel();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        ui.removeCallbacks(netTick);
+        ui.post(netTick);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        ui.removeCallbacks(netTick);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
+        super.onRequestPermissionsResult(requestCode, permissions, results);
+        refreshFooter();
+    }
+
+    private void refreshFooter() {
+        if (netFooter != null) {
+            netFooter.setText(NetInfo.describe(this) + "   ·   Cuenta: " + Session.user
+                    + "   ·   " + LoginActivity.appVersion(this));
+        }
+    }
+
+    /** Al abrir la app: vuelve al ultimo canal en vivo (salvo que sea de una categoria protegida). */
+    private void resumeLastChannel() {
+        final String id = Session.lastChanId;
+        final String cat = Session.lastChanCat;
+        net.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    List<Category> lc = XtreamClient.categories(Session.base, Session.user, Session.pass,
+                            XtreamClient.TYPE_LIVE);
+                    HashSet<String> adult = new HashSet<String>();
+                    for (Category c : lc) {
+                        if (Parental.isAdult(c.name)) {
+                            adult.add(c.id);
+                        }
+                    }
+                    if (adult.contains(cat)) {
+                        return;
+                    }
+                    List<Stream> all = XtreamClient.streams(Session.base, Session.user, Session.pass,
+                            XtreamClient.TYPE_LIVE, "*".equals(cat) ? null : cat);
+                    final List<Stream> q = new ArrayList<Stream>();
+                    int found = -1;
+                    for (Stream st : all) {
+                        if (!Parental.unlocked && adult.contains(st.categoryId)) {
+                            continue;
+                        }
+                        if (st.id.equals(id)) {
+                            found = q.size();
+                        }
+                        q.add(st);
+                    }
+                    if (found < 0) {
+                        return; // el canal ya no existe
+                    }
+                    final int idx = found;
+                    ui.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (isFinishing()) {
+                                return;
+                            }
+                            PlayerActivity.queue = q;
+                            PlayerActivity.index = idx;
+                            PlayerActivity.queueCategory = cat;
+                            startActivity(new Intent(HomeActivity.this, PlayerActivity.class));
+                        }
+                    });
+                } catch (XtreamClient.ApiException e) {
+                    android.util.Log.w(Config.TAG, "retomar canal: " + e.getMessage());
+                }
+            }
+        });
     }
 
     @Override
@@ -406,6 +499,17 @@ public class HomeActivity extends Activity {
         content.addView(progress, new FrameLayout.LayoutParams(
                 Ui.dp(c, 48), Ui.dp(c, 48), Gravity.CENTER));
 
+        netFooter = new TextView(c);
+        netFooter.setTextColor(Ui.MUTED);
+        netFooter.setTextSize(12);
+        netFooter.setSingleLine(true);
+        netFooter.setEllipsize(TextUtils.TruncateAt.END);
+        LinearLayout.LayoutParams nfLp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        nfLp.topMargin = Ui.dp(c, 6);
+        root.addView(netFooter, nfLp);
+        refreshFooter();
+
         // ---- navegacion con el control remoto
         tabLive.setNextFocusDownId(catList.getId());
         tabVod.setNextFocusDownId(catList.getId());
@@ -712,6 +816,7 @@ public class HomeActivity extends Activity {
         }
         PlayerActivity.queue = new ArrayList<Stream>(shown);
         PlayerActivity.index = position;
+        PlayerActivity.queueCategory = (loadedCat >= 0 && loadedCat < cats.size()) ? cats.get(loadedCat).id : "*";
         startActivity(new Intent(this, PlayerActivity.class));
     }
 

@@ -19,6 +19,8 @@ final class Session {
     static int maxConnections;             // 0 = desconocido
     static boolean useExternal;            // (modo tecnico) abrir los canales en VLC
     static boolean devMode;                // modo tecnico oculto: diagnostico y detalles
+    static String lastChanId = "";         // ultimo canal en vivo visto (para retomarlo al abrir)
+    static String lastChanCat = "";        // categoria desde la que se abrio ("*" = Todos)
     /** Formato que funciono para cada canal en esta sesion (stream_id -> m3u8/ts). */
     static final Map<String, String> extOk = new HashMap<String, String>();
 
@@ -56,6 +58,8 @@ final class Session {
         maxConnections = p.getInt("maxConn", 0);
         useExternal = p.getBoolean("useExternal", false);
         devMode = p.getBoolean("devMode", false);
+        lastChanId = p.getString("lastChanId", "");
+        lastChanCat = p.getString("lastChanCat", "");
     }
 
     static void save(Context c) {
@@ -68,13 +72,27 @@ final class Session {
                 .putInt("maxConn", maxConnections)
                 .putBoolean("useExternal", useExternal)
                 .putBoolean("devMode", devMode)
+                .putString("lastChanId", lastChanId)
+                .putString("lastChanCat", lastChanCat)
                 .apply();
+    }
+
+    static void saveLastChannel(Context c, String id, String categoryId) {
+        if (id == null || id.equals(lastChanId) && String.valueOf(categoryId).equals(lastChanCat)) {
+            return;
+        }
+        lastChanId = id;
+        lastChanCat = categoryId == null ? "*" : categoryId;
+        c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+                .putString("lastChanId", lastChanId).putString("lastChanCat", lastChanCat).apply();
     }
 
     /** Cerrar sesion: olvida la clave y el servidor verificado, conserva usuario y servidor escritos. */
     static void logout(Context c) {
         pass = "";
         base = null;
+        lastChanId = "";
+        lastChanCat = "";
         expTs = 0;
         save(c);
     }

@@ -47,6 +47,10 @@ class H(BaseHTTPRequestHandler):
             return self.send(404, "nf")
         user, pw = q.get("username"), q.get("password")
         act = q.get("action")
+        if (user, pw) == ("bloq", "x"):          # panel que rechaza claves malas con 403
+            return self.send(403, "Forbidden", "text/html")
+        if (user, pw) == ("caido", "x"):         # servicio con falla interna
+            return self.send(503, "Service Unavailable", "text/html")
         if (user, pw) == ("vencido", "x"):
             return self.send(200, json.dumps({"user_info": {"auth": 1, "status": "Expired"}}))
         if (user, pw) != GOOD:

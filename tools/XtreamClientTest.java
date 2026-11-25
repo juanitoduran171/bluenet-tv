@@ -21,8 +21,16 @@ public class XtreamClientTest {
         check("cuenta vencida -> ACCOUNT", kindOf(host, "vencido", "x") == ApiException.KIND_ACCOUNT);
         check("no-Xtream -> RESPONSE", kindOf("http://127.0.0.1:18080/notxtream", U, P) == ApiException.KIND_RESPONSE);
         check("puerto cerrado -> NETWORK", kindOf("127.0.0.1:1", U, P) == ApiException.KIND_NETWORK);
-        check("403 -> NETWORK (bloqueo, no credenciales)", kindOf("http://127.0.0.1:18080/forbidden", U, P) == ApiException.KIND_NETWORK);
+        check("403 en cualquier ruta -> DENIED", kindOf("http://127.0.0.1:18080/forbidden", U, P) == ApiException.KIND_DENIED);
         check("sin servidor -> RESPONSE", kindOf("  ", U, P) == ApiException.KIND_RESPONSE);
+        check("403 del panel -> DENIED (no 'sin internet')", kindOf(host, "bloq", "x") == ApiException.KIND_DENIED);
+        check("503 del servicio -> DENIED", kindOf(host, "caido", "x") == ApiException.KIND_DENIED);
+        long t0 = System.currentTimeMillis();
+        try { XtreamClient.authenticate("127.0.0.1:18080", "bloq", "x", "http://127.0.0.1:18080"); check("servidor conocido 403", false); }
+        catch (ApiException e) { check("servidor conocido + 403 -> DENIED inmediato (<2s, sin probar otros puertos)", e.kind == ApiException.KIND_DENIED && System.currentTimeMillis() - t0 < 2000); }
+        check("candidatos con servidor conocido primero", XtreamClient.candidates("catv.blue.net.ec", "http://catv.blue.net.ec:8080").get(0).equals("http://catv.blue.net.ec:8080")
+            && XtreamClient.candidates("catv.blue.net.ec", "http://catv.blue.net.ec:8080").size() == 5);
+        check("login ok con servidor conocido", XtreamClient.authenticate(host, U, P, "http://127.0.0.1:18080").base.equals("http://127.0.0.1:18080"));
         Auth ar = XtreamClient.authenticate("http://127.0.0.1:18080/redir/", U, P);
         check("redireccion 302 seguida", ar.base.endsWith("/redir"));
 
