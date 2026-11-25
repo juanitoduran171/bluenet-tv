@@ -1,0 +1,47 @@
+name: Prueba SDK Vega
+
+# Verifica si el SDK de Vega (Fire TV / Vega OS) se puede instalar en un runner Linux de GitHub,
+# sin cuenta de Amazon, para compilar la version Vega de BLUEnet TV en la nube.
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/vega-sdk-probe.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Instalar dependencias de Ubuntu que pide Amazon
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lz4 jq python3 > /dev/null
+          (sudo apt-get install -y -qq watchman > /dev/null 2>&1 || echo "watchman no disponible por apt")
+          ls -l /dev/kvm || echo "sin /dev/kvm"
+      - name: Ejecutar instalador oficial del SDK de Vega
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          curl -fsSL https://sdk-installer.vega.labcollab.net/get_vvm.sh -o get_vvm.sh 2>&1 | tee probe.log || true
+          echo "== tamaño del script: $(wc -c < get_vvm.sh 2>/dev/null)" | tee -a probe.log
+          echo "== URLs dentro del script:" | tee -a probe.log
+          grep -oE 'https?://[A-Za-z0-9./_?=&-]+' get_vvm.sh | sort -u | tee -a probe.log || true
+          echo "== ejecutando (respuestas por defecto) ==" | tee -a probe.log
+          (yes "" | timeout 900 bash get_vvm.sh) 2>&1 | tail -150 | tee -a probe.log || true
+          echo "== resultado ==" | tee -a probe.log
+          (source ~/vega/env 2>/dev/null; which vega && vega --version) 2>&1 | tee -a probe.log || echo "vega NO instalado" | tee -a probe.log
+          ls ~/vega 2>&1 | tee -a probe.log || true
+      - name: Publicar resultado en la rama 'vega-probe'
+        if: always()
+        run: |
+          mkdir out && cp probe.log out/ 2>/dev/null || echo "sin log" > out/probe.log
+          cp get_vvm.sh out/ 2>/dev/null || true
+          cd out && git init -q && git checkout -q -b vega-probe && git add -A
+          git -c user.name=ci -c user.email=ci@users.noreply.github.com commit -qm "probe ${{ github.sha }}"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" vega-probe
