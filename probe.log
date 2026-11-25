@@ -1,0 +1,179 @@
+== tamaño del script: 61716
+== URLs dentro del script:
+https://askubuntu.com/questions/1387141/curl-23-failure-writing-output-to-destination
+https://developer.amazon.com/docs/vega/latest/hello-world.html
+https://developer.amazon.com/docs/vega/latest/telemetry.html.
+https://developer.amazon.com/support/legal/pml.
+https://k-artifactory-external.labcollab.net/artifactory/api/kpm/
+https://marketplace.visualstudio.com/items?itemName=amazon-devices.kepler-studio
+== ejecutando (respuestas por defecto) ==
+Logging to /home/runner/vega/vvm/vvm-2026-11-25.log
+
+✨ [1mGreetings from Vega![22m ✨
+
+This script downloads and installs the Vega CLI.
+
+⚠️ The Vega SDK and its packaged tools collect telemetry by default.
+For details about the types of telemetry collected or instructions on how to opt out,
+visit https://developer.amazon.com/docs/vega/latest/telemetry.html.
+
+Getting latest Vega CLI version...
+Installing Vega CLI 1.4.9...
+Installing [------------------------------]   0%     Installing [------------------------------]   1%     Installing [------------------------------]   2%     Installing [------------------------------]   3%     Installing [=-----------------------------]   4%     Installing [=-----------------------------]   5%     Installing [=-----------------------------]   6%     Installing [==----------------------------]   7%     Installing [==----------------------------]   8%     Installing [==----------------------------]   9%     Installing [===---------------------------]  10%     Installing [===---------------------------]  11%     Installing [===---------------------------]  12%     Installing [===---------------------------]  13%     Installing [====--------------------------]  14%     Installing [====--------------------------]  15%     Installing [====--------------------------]  16%     Installing [=====-------------------------]  17%     Installing [=====-------------------------]  18%     Installing [=====-------------------------]  19%     Installing [======------------------------]  20%     Installing [======------------------------]  21%     Installing [======------------------------]  22%     Installing [======------------------------]  23%     Installing [=======-----------------------]  24%     Installing [=======-----------------------]  25%     Installing [=======-----------------------]  26%     Installing [========----------------------]  27%     Installing [========----------------------]  28%     Installing [========----------------------]  29%     Installing [=========---------------------]  30%     Installing [=========---------------------]  31%     Installing [=========---------------------]  32%     Installing [=========---------------------]  33%     Installing [==========--------------------]  34%     Installing [==========--------------------]  35%     Installing [==========--------------------]  36%     Installing [===========-------------------]  37%     Installing [===========-------------------]  38%     Installing [===========-------------------]  39%     Installing [============------------------]  40%     Installing [============------------------]  41%     Installing [============------------------]  42%     Installing [============------------------]  43%     Installing [=============-----------------]  44%     Installing [=============-----------------]  45%     Installing [=============-----------------]  46%     Installing [==============----------------]  47%     Installing [==============----------------]  48%     Installing [==============----------------]  49%     Installing [===============---------------]  50%     Installing [===============---------------]  51%     Installing [===============---------------]  52%     Installing [===============---------------]  53%     Installing [================--------------]  54%     Installing [================--------------]  55%     Installing [================--------------]  56%     Installing [=================-------------]  57%     Installing [=================-------------]  58%     Installing [=================-------------]  59%     Installing [==================------------]  60%     Installing [==================------------]  61%     Installing [==================------------]  62%     Installing [==================------------]  63%     Installing [===================-----------]  64%     Installing [===================-----------]  65%     Installing [===================-----------]  66%     Installing [====================----------]  67%     Installing [====================----------]  68%     Installing [====================----------]  69%     Installing [=====================---------]  70%     Installing [=====================---------]  71%     Installing [=====================---------]  72%     Installing [=====================---------]  73%     Installing [======================--------]  74%     Installing [======================--------]  75%     Installing [======================--------]  76%     Installing [=======================-------]  77%     Installing [=======================-------]  78%     Installing [=======================-------]  79%     Installing [========================------]  80%     Installing [========================------]  81%     Installing [========================------]  82%     Installing [========================------]  83%     Installing [=========================-----]  84%     Installing [=========================-----]  85%     Installing [=========================-----]  86%     Installing [==========================----]  87%     Installing [==========================----]  88%     Installing [==========================----]  89%     Installing [===========================---]  90%     Installing [===========================---]  91%     Installing [===========================---]  92%     Installing [===========================---]  93%     Installing [============================--]  94%     Installing [============================--]  95%     Installing [============================--]  96%     Installing [=============================-]  97%     Installing [=============================-]  98%     Installing [=============================-]  99%     Installing [==============================] 100%     
+Vega CLI 1.4.9 installed to /home/runner/vega/bin
+Setting up Vega CLI...
+Current component installation directory: /home/runner/vega/sdk
+Enter new component installation directory (press Enter to keep current): Component installation directory configured: /home/runner/vega/sdk
+Configuration saved to: /home/runner/vega/config.json
+✔ Vega CLI set up 
+
+✔ SDK linking not available, skipping
+
+• To manually link SDKs, run: vega sdk link --path <sdk_path>
+
+➡️ Install Vega SDK version 2.0.15159? [Y/n] (press Enter for yes): get_vvm.sh: line 531: /dev/tty: No such device or address
+Extracting SDK...
+Extracting SDK: 10% (4043/40428 files)
+Extracting SDK: 20% (8086/40428 files)
+Extracting SDK: 30% (12129/40428 files)
+Extracting SDK: 40% (16172/40428 files)
+Extracting SDK: 50% (20214/40428 files)
+Extracting SDK: 60% (24257/40428 files)
+Extracting SDK: 70% (28300/40428 files)
+Extracting SDK: 80% (32343/40428 files)
+Extracting SDK: 90% (36386/40428 files)
+Extracting SDK: 100% (40428/40428 files)
+Installing SDK...
+Extracting VVD...
+Extracted Files: [------------------------------] 0%Extracted Files: [------------------------------] 1%Extracted Files: [------------------------------] 2%Extracted Files: [------------------------------] 3%Extracted Files: [=-----------------------------] 4%Extracted Files: [=-----------------------------] 5%Extracted Files: [=-----------------------------] 6%Extracted Files: [==----------------------------] 7%Extracted Files: [==----------------------------] 8%Extracted Files: [==----------------------------] 9%Extracted Files: [===---------------------------] 10%Extracted Files: [===---------------------------] 11%Extracted Files: [===---------------------------] 12%Extracted Files: [===---------------------------] 13%Extracted Files: [====--------------------------] 14%Extracted Files: [====--------------------------] 15%Extracted Files: [====--------------------------] 16%Extracted Files: [=====-------------------------] 17%Extracted Files: [=====-------------------------] 18%Extracted Files: [=====-------------------------] 19%Extracted Files: [======------------------------] 20%Extracted Files: [======------------------------] 21%Extracted Files: [======------------------------] 22%Extracted Files: [======------------------------] 23%Extracted Files: [=======-----------------------] 24%Extracted Files: [=======-----------------------] 25%Extracted Files: [=======-----------------------] 26%Extracted Files: [========----------------------] 27%Extracted Files: [========----------------------] 28%Extracted Files: [========----------------------] 29%Extracted Files: [=========---------------------] 30%Extracted Files: [=========---------------------] 31%Extracted Files: [=========---------------------] 32%Extracted Files: [=========---------------------] 33%Extracted Files: [==========--------------------] 34%Extracted Files: [==========--------------------] 35%Extracted Files: [==========--------------------] 36%Extracted Files: [===========-------------------] 37%Extracted Files: [===========-------------------] 38%Extracted Files: [===========-------------------] 39%Extracted Files: [============------------------] 40%Extracted Files: [============------------------] 41%Extracted Files: [============------------------] 42%Extracted Files: [============------------------] 43%Extracted Files: [=============-----------------] 44%Extracted Files: [=============-----------------] 45%Extracted Files: [=============-----------------] 46%Extracted Files: [==============----------------] 47%Extracted Files: [==============----------------] 48%Extracted Files: [==============----------------] 49%Extracted Files: [===============---------------] 50%Extracted Files: [===============---------------] 51%Extracted Files: [===============---------------] 52%Extracted Files: [===============---------------] 53%Extracted Files: [================--------------] 54%Extracted Files: [================--------------] 55%Extracted Files: [================--------------] 56%Extracted Files: [=================-------------] 57%Extracted Files: [=================-------------] 58%Extracted Files: [=================-------------] 59%Extracted Files: [==================------------] 60%Extracted Files: [==================------------] 61%Extracted Files: [==================------------] 62%Extracted Files: [==================------------] 63%Extracted Files: [===================-----------] 64%Extracted Files: [===================-----------] 65%Extracted Files: [===================-----------] 66%Extracted Files: [====================----------] 67%Extracted Files: [====================----------] 68%Extracted Files: [====================----------] 69%Extracted Files: [=====================---------] 70%Extracted Files: [=====================---------] 71%Extracted Files: [=====================---------] 72%Extracted Files: [=====================---------] 73%Extracted Files: [======================--------] 74%Extracted Files: [======================--------] 75%Extracted Files: [======================--------] 76%Extracted Files: [=======================-------] 77%Extracted Files: [=======================-------] 78%Extracted Files: [=======================-------] 79%Extracted Files: [========================------] 80%Extracted Files: [========================------] 81%Extracted Files: [========================------] 82%Extracted Files: [========================------] 83%Extracted Files: [=========================-----] 84%Extracted Files: [=========================-----] 85%Extracted Files: [=========================-----] 86%Extracted Files: [==========================----] 87%Extracted Files: [==========================----] 88%Extracted Files: [==========================----] 89%Extracted Files: [===========================---] 90%Extracted Files: [===========================---] 91%Extracted Files: [===========================---] 92%Extracted Files: [===========================---] 93%Extracted Files: [============================--] 94%Extracted Files: [============================--] 95%Extracted Files: [============================--] 96%Extracted Files: [=============================-] 97%Extracted Files: [=============================-] 98%Extracted Files: [=============================-] 99%Extracted Files: [==============================] 100%
+Installing VVD...
+Installation complete. Version 2.0.15159 has been installed.
+Version 2.0.15159 has been set as the default version.
+Installed ✔ 
+Installed SDK Versions:
+
+Channel: main
+→ 2.0.15159 - Active SDK Version
+
+Total: 1 versions
+
+➡️ Install Vega Studio into Visual Studio Code? [Y/n] (press Enter for yes): get_vvm.sh: line 531: /dev/tty: No such device or address
+• Visual Studio Code not found. Unable to install Vega Studio extension.
+You may install Vega Studio from VSCode Marketplace: https://marketplace.visualstudio.com/items?itemName=amazon-devices.kepler-studio
+
+⚠️ Symlinked [1mvega[22m to [1mkepler[22m for backward compatibility.
+Use [1mvega[22m directly for all future invocations.
+Modified shell .rc files: /home/runner/.bashrc /home/runner/.bash_profile /home/runner/.profile
+➡️ Set up Amazon Devices BuilderTools for AI-assisted Vega app development in a project directory? [y/N] (press Enter for no): get_vvm.sh: line 531: /dev/tty: No such device or address
+⚠️ Skipping Amazon Devices BuilderTools AI capabilities setup: setup was declined.
+To set it up later, run this command from the Vega project you want to configure:
+  [1mnpx -y @amazon-devices/amazon-devices-buildertools-mcp@latest init-context[22m
+
+
+✨ You're all set!
+
+• Show installed Vega SDKs: vega sdk list-installed
+• List available SDK versions to install: vega sdk list-remote
+• Build your first app with the CLI or in Vega Studio: https://developer.amazon.com/docs/vega/latest/hello-world.html
+yes: standard output: Broken pipe
+== resultado ==
+/home/runner/vega/bin/vega
+Active SDK Version: 2.0.15159
+Vega CLI Version: 1.4.9
+
+bin
+config.json
+env
+sdk
+telemetry
+vvm
+== list-templates
+Available templates:
+
+helloWorld:	Use this project template to create a new app (targets RN v0.83)
+helloWorld-rn72:	Use this project template to create a new app (targets RN v0.72)
+basic-turbo-module:	An example Turbo Module that includes stubs for calling your own native logic.
+idl-turbo-module:	An example Turbo Module that uses native OS APIs defined in IDL
+vegaWebview:	A webview template for Vega applications
+== generate --help
+Generate a new project from a template
+
+Usage: vega project generate [options] [options]
+
+Options:
+  -t, --template     Template Id, run "vega project list-templates" to get the
+                     list of valid values                    [string] [required]
+  -n, --name         Project name. Alpha-numeric string with a max of 100
+                     characters.                             [string] [required]
+      --packageId    Package Id for manifest.toml, required in applications
+                                                                        [string]
+  -o, --outputDir    Output directory for template generation
+                   [string] [default: "/home/runner/work/bluenet-tv/bluenet-tv"]
+      --libraryName  Library name                                       [string]
+      --idlPackage   IDL package name                                   [string]
+      --uri          URI to load in the WebView
+                             [string] [default: "file:///pkg/assets/index.html"]
+  -h, -?, --help     Show help                                         [boolean]
+
+Examples:
+  vega project generate --template          Create a new application project
+  helloWorld --name exampleProject          named exampleProject in the current
+                                            directory
+  vega project generate --template          Create a new Turbo Module project
+  basic-turbo-module --name MyTurbomodule   named MyTurbomodule in the /tmp
+  --outputDir /tmp                          directory
+OS Version: target=2.0, min=2.0 (template defaults)
+Success! Here are some common commands to try:
+* to build Native artifacts, run "vega build"
+* to build React Native for Vega app, run "npm install && npx react-native build-vega" or similar commands depending on your Package Manager of choice
+* to install and launch app, run "vega run-app <packageFile e.g. sampleapp.vpkg>"
+* to see more commands, run "vega --help"
+* to see more projects you can generate by template, run "vega project list-templates"
+== archivos generados:
+.
+./.eslintrc
+./.gitignore
+./.prettierrc
+./app.json
+./babel.config.js
+./index.js
+./jest.config.json
+./manifest.toml
+./metro.config.js
+./package.json
+./src
+./src/App.tsx
+./src/assets
+./src/components
+./src/data
+./test
+./test/App.spec.tsx
+./test/Tile.spec.tsx
+./test/__mocks__
+./tsconfig.json
+
+Some issues need review, and may require choosing
+a different dependency.
+
+Run `npm audit` for details.
+manifest validation found 0 errors
+[native-build] manifest validation found 0 errors
+[native-build] created: /home/runner/work/bluenet-tv/bluenet-tv/work/build/private/kepler/@amazon-devices/bluenettv/0.1/vega/aarch64/Release/@amazon-devices/bluenettv_aarch64.vpkg
+[native-build] manifest validation found 0 errors
+[native-build] created: /home/runner/work/bluenet-tv/bluenet-tv/work/build/private/kepler/@amazon-devices/bluenettv/0.1/vega/armv7/Release/@amazon-devices/bluenettv_armv7.vpkg
+[native-build] manifest validation found 0 errors
+[native-build] created: /home/runner/work/bluenet-tv/bluenet-tv/work/build/private/kepler/@amazon-devices/bluenettv/0.1/vega/x86_64/Release/@amazon-devices/bluenettv_x86_64.vpkg
+== vpkg:
+-rw-r--r-- 1 runner runner 984258 Nov 25 23:04 ./build/armv7-release/bluenettv_armv7.vpkg
+-rw-r--r-- 1 runner runner 984258 Nov 25 23:04 ./build/private/kepler/@amazon-devices/bluenettv/0.1/vega/armv7/Release/@amazon-devices/bluenettv_armv7.vpkg
+-rw-r--r-- 1 runner runner 984243 Nov 25 23:04 ./build/private/kepler/@amazon-devices/bluenettv/0.1/vega/aarch64/Release/@amazon-devices/bluenettv_aarch64.vpkg
+-rw-r--r-- 1 runner runner 984261 Nov 25 23:04 ./build/private/kepler/@amazon-devices/bluenettv/0.1/vega/x86_64/Release/@amazon-devices/bluenettv_x86_64.vpkg
+-rw-r--r-- 1 runner runner 984261 Nov 25 23:04 ./build/x86_64-release/bluenettv_x86_64.vpkg
+-rw-r--r-- 1 runner runner 984243 Nov 25 23:04 ./build/aarch64-release/bluenettv_aarch64.vpkg
+== dependencias @amazon-devices instaladas:
+eslint-plugin-kepler
+kepler-cli-platform
+kepler-compatibility-metro-config
+kepler-module-manifest-builder
+keplerscript-commonmodules
+react-native-kepler
