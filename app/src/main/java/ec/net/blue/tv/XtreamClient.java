@@ -328,6 +328,75 @@ public final class XtreamClient {
         return base + "/movie/" + seg(user) + "/" + seg(pass) + "/" + seg(streamId) + "." + ext;
     }
 
+    public static final class MovieInfo {
+        public String name = "";
+        public String plot = "";
+        public String cover = "";      // poster
+        public String backdrop = "";   // imagen de fondo
+        public String genre = "";
+        public String year = "";
+        public String rating = "";
+        public String duration = "";
+        public String director = "";
+        public String cast = "";
+        public String ext = "";
+    }
+
+    /** Ficha de una pelicula (get_vod_info). Campos ausentes quedan vacios. */
+    public static MovieInfo vodInfo(String base, String user, String pass, String vodId) throws ApiException {
+        String body;
+        try {
+            body = httpGet(base + "/player_api.php?username=" + enc(user) + "&password=" + enc(pass)
+                    + "&action=get_vod_info&vod_id=" + enc(vodId), 10000, 30000).trim();
+        } catch (IOException e) {
+            throw new ApiException(ApiException.KIND_NETWORK, "Error de red: " + e.getMessage());
+        }
+        MovieInfo m = new MovieInfo();
+        JSONObject root;
+        try {
+            root = new JSONObject(body);
+        } catch (JSONException e) {
+            return m; // algunos paneles devuelven [] si no hay ficha
+        }
+        JSONObject info = root.optJSONObject("info");
+        if (info != null) {
+            m.plot = str(info, "plot");
+            if (m.plot.length() == 0) {
+                m.plot = str(info, "description");
+            }
+            m.cover = str(info, "movie_image");
+            if (m.cover.length() == 0) {
+                m.cover = str(info, "cover_big");
+            }
+            JSONArray bd = info.optJSONArray("backdrop_path");
+            if (bd != null && bd.length() > 0) {
+                m.backdrop = bd.optString(0, "");
+            }
+            m.genre = str(info, "genre");
+            m.rating = str(info, "rating");
+            m.duration = str(info, "duration");
+            m.director = str(info, "director");
+            m.cast = str(info, "cast");
+            if (m.cast.length() == 0) {
+                m.cast = str(info, "actors");
+            }
+            String date = str(info, "releasedate");
+            if (date.length() == 0) {
+                date = str(info, "release_date");
+            }
+            m.year = date.length() >= 4 ? date.substring(0, 4) : date;
+            m.name = str(info, "name");
+        }
+        JSONObject md = root.optJSONObject("movie_data");
+        if (md != null) {
+            if (m.name.length() == 0) {
+                m.name = str(md, "name");
+            }
+            m.ext = str(md, "container_extension");
+        }
+        return m;
+    }
+
     public static String seriesUrl(String base, String user, String pass, String episodeId, String ext) {
         return base + "/series/" + seg(user) + "/" + seg(pass) + "/" + seg(episodeId) + "." + ext;
     }

@@ -83,6 +83,15 @@ public class XtreamClientTest {
         check("serie inexistente -> vacia sin error", XtreamClient.seriesInfo(b, U, P, "999").seasons.isEmpty());
         check("url episodio", XtreamClient.seriesUrl(b, U, P, "800", "mkv").equals("http://127.0.0.1:18080/series/juan/cl%20ave%2B1%26%C3%A9/800.mkv"));
 
+        // ---- ficha de pelicula ----
+        MovieInfo m1 = XtreamClient.vodInfo(b, U, P, "201");
+        check("vod info: datos completos", m1.name.equals("Película A") && m1.plot.equals("Trama A") && m1.year.equals("2021")
+            && m1.genre.equals("Acción") && m1.duration.equals("01:52:00") && m1.cast.equals("Actor 1, Actor 2") && m1.backdrop.equals("http://x/bd.jpg") && m1.ext.equals("mkv"));
+        MovieInfo m2 = XtreamClient.vodInfo(b, U, P, "202");
+        check("vod info: campos alternativos (description, cover_big, actors)", m2.plot.equals("Sin plot") && m2.cover.equals("http://x/cb.jpg") && m2.cast.equals("X") && m2.year.equals("") && m2.name.equals("Película B"));
+        MovieInfo m3 = XtreamClient.vodInfo(b, U, P, "999");
+        check("vod info: panel responde [] -> ficha vacia sin error", m3.plot.equals("") && m3.name.equals(""));
+
         System.out.println(fails == 0 ? "\nTODAS LAS PRUEBAS PASARON" : "\nFALLAS: " + fails);
         System.exit(fails == 0 ? 0 : 1);
     }

@@ -810,6 +810,11 @@ public class HomeActivity extends Activity {
             startActivity(new Intent(this, SeriesActivity.class));
             return;
         }
+        if (chosen.type == XtreamClient.TYPE_VOD) {
+            MovieActivity.movie = chosen;
+            startActivity(new Intent(this, MovieActivity.class));
+            return;
+        }
         if (chosen.live && Session.devMode && Session.useExternal) {
             Playback.launchExternal(this, Playback.urlFor(chosen, 0), chosen.name);
             return;

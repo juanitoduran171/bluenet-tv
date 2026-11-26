@@ -63,6 +63,17 @@ class H(BaseHTTPRequestHandler):
         if act == "get_series_categories": return self.send(200, json.dumps(SER_CATS))
         if act == "get_series":
             c = q.get("category_id"); return self.send(200, json.dumps(SERIES.get(c, []) if c else sum(SERIES.values(), [])))
+        if act == "get_vod_info":
+            v = q.get("vod_id")
+            if v == "201":
+                return self.send(200, json.dumps({"info": {"name": "Película A", "plot": "Trama A", "movie_image": "http://x/p.jpg",
+                    "backdrop_path": ["http://x/bd.jpg"], "genre": "Acción", "releasedate": "2021-03-04", "rating": "7.5",
+                    "duration": "01:52:00", "director": "Dir", "cast": "Actor 1, Actor 2"},
+                    "movie_data": {"stream_id": 201, "name": "Película A", "container_extension": "mkv"}}))
+            if v == "202":
+                return self.send(200, json.dumps({"info": {"description": "Sin plot", "cover_big": "http://x/cb.jpg", "release_date": None, "actors": "X"},
+                    "movie_data": {"name": "Película B"}}))
+            return self.send(200, "[]")
         if act == "get_series_info": return self.send(200, json.dumps(INFO.get(q.get("series_id"), {"info": [], "episodes": []})))
         if act == "get_live_streams":
             c = q.get("category_id"); return self.send(200, json.dumps(LIVE.get(c, []) if c else sum(LIVE.values(), [])))

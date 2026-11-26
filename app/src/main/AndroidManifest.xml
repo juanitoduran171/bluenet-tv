@@ -48,6 +48,12 @@
             android:configChanges="orientation|screenSize|keyboardHidden|keyboard|navigation|screenLayout|smallestScreenSize|uiMode" />
 
         <activity
+            android:name=".MovieActivity"
+            android:exported="false"
+            android:screenOrientation="sensorLandscape"
+            android:configChanges="orientation|screenSize|keyboardHidden|keyboard|navigation|screenLayout|smallestScreenSize|uiMode" />
+
+        <activity
             android:name=".SeriesActivity"
             android:exported="false"
             android:screenOrientation="sensorLandscape"
